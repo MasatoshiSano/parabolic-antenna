@@ -23,9 +23,8 @@ Thumbs.db
 *.swo
 *:Zone.Identifier
 
-# OMC working directory state (keep .omc/plans/ if needed)
-.omc/state/
-.omc/logs/
+# OMC working directory (local-only state, plans, sessions, memory)
+.omc/
 
 # Build / dist
 build/
