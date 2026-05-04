@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>パラボラアンテナの台座の傾きを計算で当てる</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --primary:#174ECC; --primary-dark:#0B2D7A; --primary-50:#EEF3FF; --primary-100:#DCE7FF;
+  --accent:#8A42FF; --accent-50:#F3ECFF;
+  --success:#12A07F; --success-50:#E0F6EF;
+  --warn:#E8820C; --warn-50:#FFF4E3;
+  --sun:#F5A623; --sun-soft:#FFE4A8;
+  --ink:#0F1629; --ink-soft:#1F2A44; --muted:#5F6B7A;
+  --line:#E3E8F0; --bg:#FFFFFF; --bg-soft:#F5F7FB; --bg-mist:#FAFBFE;
+  --radius:18px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#24324a;font-family:"Noto Sans JP","Yu Gothic UI",sans-serif;color:var(--ink)}
+body{padding:40px 0;display:flex;flex-direction:column;align-items:center;gap:32px}
+.slide{width:1920px;height:1080px;background:var(--bg);position:relative;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+
+/* ==== Header ==== */
+.header{position:absolute;top:56px;left:80px;right:80px;display:flex;align-items:flex-end;justify-content:space-between;padding-bottom:28px;border-bottom:1px solid var(--line)}
+.header .title-wrap{display:flex;gap:22px;align-items:flex-end}
+.header .bar{width:8px;height:64px;background:var(--primary);border-radius:4px}
+.header .t{font-size:46px;font-weight:800;color:var(--ink);letter-spacing:-.01em}
+.header .st{font-size:20px;color:var(--muted);font-weight:500;margin-top:8px}
+.header .logo{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:14px;font-weight:700;letter-spacing:.1em}
+.header .logo .dot{width:10px;height:10px;background:var(--primary);border-radius:50%}
+.pager{position:absolute;bottom:48px;right:80px;font-size:16px;color:var(--muted);font-weight:700;letter-spacing:.05em}
+.brandline{position:absolute;bottom:48px;left:80px;display:flex;align-items:center;gap:14px;font-size:14px;color:var(--muted);font-weight:700;letter-spacing:.1em}
+.brandline .bl-dot{width:8px;height:8px;background:var(--primary);border-radius:50%}
+.content{position:absolute;top:200px;left:80px;right:80px;bottom:120px}
+
+/* ==== Cover ==== */
+#s1{
+  background:
+    radial-gradient(ellipse at 12% 18%, #2E6DE8, transparent 55%),
+    radial-gradient(ellipse at 88% 88%, #8A42FF, transparent 55%),
+    linear-gradient(135deg,#0B2D7A,#174ECC 60%,#2E75FF);
+  color:#fff;
+}
+.cover-wrap{position:absolute;inset:0;padding:120px;display:flex;flex-direction:column;justify-content:space-between;z-index:2}
+.cover-kicker{font-size:22px;font-weight:800;letter-spacing:.3em;opacity:.85}
+.cover-title{font-size:114px;font-weight:900;line-height:.98;letter-spacing:-.02em}
+.cover-sub{font-size:32px;font-weight:500;opacity:.92;margin-top:32px;line-height:1.55;max-width:1500px}
+.chips{display:flex;gap:14px;margin-top:44px;flex-wrap:wrap}
+.chip{background:rgba(255,255,255,.14);backdrop-filter:blur(8px);padding:14px 26px;border-radius:999px;font-size:18px;font-weight:700;border:1px solid rgba(255,255,255,.28)}
+.cover-foot{display:flex;justify-content:space-between;align-items:flex-end;font-size:18px;opacity:.85;font-weight:600}
+.cover-deco{position:absolute;right:80px;top:120px;width:520px;height:520px;opacity:.18;z-index:1}
+
+/* ==== One-liner ==== */
+.one-liner{display:flex;flex-direction:column;gap:24px;align-items:center;justify-content:center;height:100%;text-align:center}
+.one-liner .kicker{font-size:24px;font-weight:800;letter-spacing:.18em;color:var(--primary)}
+.one-liner .big{font-size:108px;font-weight:900;line-height:1.12;letter-spacing:-.02em;color:var(--ink)}
+.one-liner .big .em{color:var(--accent)}
+.one-liner .sub{font-size:30px;color:var(--muted);font-weight:500;margin-top:16px;line-height:1.55;max-width:1500px}
+
+/* ==== Diagram boxes ==== */
+.diag{
+  background:var(--bg-mist);border:1px solid var(--line);border-radius:24px;
+  display:flex;align-items:center;justify-content:center;
+}
+.diag-cap{font-size:18px;color:var(--muted);font-weight:600;text-align:center;margin-top:14px}
+
+/* ==== Two-column ==== */
+.two-col{display:grid;grid-template-columns:1fr 1.25fr;gap:48px;height:100%}
+.two-col .left{display:flex;flex-direction:column;gap:24px;justify-content:center}
+.two-col .right{display:flex;flex-direction:column;justify-content:center}
+.lead{font-size:26px;color:var(--ink-soft);line-height:1.6;font-weight:500}
+.blist{display:flex;flex-direction:column;gap:18px;margin-top:8px}
+.blist .bi{display:flex;gap:18px;font-size:24px;color:var(--ink-soft);line-height:1.55;font-weight:500}
+.blist .bi::before{content:"";width:10px;height:10px;background:var(--primary);border-radius:50%;flex-shrink:0;margin-top:14px}
+.blist.accent .bi::before{background:var(--accent)}
+.blist.success .bi::before{background:var(--success)}
+.blist .num{flex-shrink:0;width:46px;height:46px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:22px}
+.blist.numbered .bi{font-size:24px;align-items:center}
+.blist.numbered .bi::before{display:none}
+
+/* Big number tiles */
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.tile{background:var(--bg-mist);border:1px solid var(--line);border-radius:20px;padding:28px 24px;display:flex;flex-direction:column;gap:10px}
+.tile .lbl{font-size:16px;font-weight:800;color:var(--primary);letter-spacing:.1em}
+.tile .val{font-size:46px;font-weight:900;color:var(--ink);font-family:"JetBrains Mono",monospace}
+.tile .desc{font-size:16px;color:var(--muted);font-weight:500;line-height:1.5}
+
+/* Math callout */
+.formula{
+  font-family:"JetBrains Mono",monospace;font-weight:700;color:var(--ink);
+  background:linear-gradient(135deg,#F3ECFF,#EEF3FF);
+  border:1.5px solid #D7C9FF;border-radius:18px;padding:28px 36px;font-size:38px;line-height:1.6;
+}
+.formula.compact{font-size:30px;padding:22px 28px}
+.formula .v{color:var(--accent)}
+.formula .k{color:var(--primary)}
+.formula .c{color:var(--muted);font-weight:500;font-size:.65em}
+.formula-sub{font-size:18px;color:var(--muted);font-weight:600;margin-top:10px}
+
+/* Steps */
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:30px;margin-top:8px}
+.step-card{background:#fff;border:1px solid var(--line);border-radius:20px;padding:28px;display:flex;flex-direction:column;gap:14px;position:relative}
+.step-card .sn{position:absolute;top:-18px;left:24px;background:var(--primary);color:#fff;border-radius:999px;padding:6px 16px;font-size:14px;font-weight:800;letter-spacing:.1em}
+.step-card .stl{font-size:24px;font-weight:800;color:var(--ink);margin-top:6px}
+.step-card .sdesc{font-size:18px;color:var(--ink-soft);line-height:1.55}
+
+/* Chapter */
+.ch-wrap{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;padding:0 140px;z-index:2}
+.ch-kicker{font-size:22px;font-weight:800;letter-spacing:.22em;color:var(--primary);margin-bottom:28px}
+.ch-title{font-size:124px;font-weight:900;line-height:1;letter-spacing:-.02em;color:var(--ink)}
+.ch-sub{font-size:30px;color:var(--muted);font-weight:500;margin-top:32px;line-height:1.55;max-width:1400px}
+.ch-deco{position:absolute;right:-180px;top:-180px;width:900px;height:900px;background:radial-gradient(circle,var(--primary-50),transparent 65%);z-index:0}
+
+/* Q-card */
+.q-card{
+  background:linear-gradient(135deg,#FFF4E3,#FFE4A8);border:1.5px solid #F3CD7B;border-radius:22px;
+  padding:28px 34px;font-size:26px;font-weight:700;color:#7A4C00;line-height:1.55;
+  display:flex;gap:18px;align-items:flex-start;
+}
+.q-card .qm{font-size:46px;font-weight:900;color:#E8820C;flex-shrink:0;line-height:.9}
+
+/* Tag */
+.tag{display:inline-block;padding:8px 18px;border-radius:999px;font-size:15px;font-weight:800;letter-spacing:.1em;background:var(--primary-50);color:var(--primary)}
+.tag.a{background:var(--accent-50);color:var(--accent)}
+.tag.s{background:var(--success-50);color:var(--success)}
+
+/* Final TY */
+#s12{
+  background:radial-gradient(ellipse at 50% 30%, #2E6DE8, transparent 60%),linear-gradient(135deg,#0B2D7A,#174ECC 70%,#8A42FF);
+  color:#fff
+}
+.ty-wrap{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:120px}
+.ty-big{font-size:160px;font-weight:900;letter-spacing:-.02em;line-height:.95}
+.ty-sub{font-size:30px;font-weight:500;opacity:.88;margin-top:36px;line-height:1.55;max-width:1400px}
+
+/* SVG figure helpers */
+.fig{width:100%;height:100%;display:flex;align-items:center;justify-content:center}
+.fig svg{max-width:100%;max-height:100%}
+.fig-wrap{display:flex;flex-direction:column;height:100%}
+.fig-area{flex:1;display:flex;align-items:center;justify-content:center;background:var(--bg-mist);border:1px solid var(--line);border-radius:24px;padding:24px}
+
+/* eq table */
+.eq-tbl{display:flex;flex-direction:column;gap:14px;margin-top:8px}
+.eq-row{display:grid;grid-template-columns:80px 1fr;gap:18px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px 22px}
+.eq-row .lbl{font-size:18px;font-weight:800;color:var(--primary);letter-spacing:.05em}
+.eq-row .ex{font-family:"JetBrains Mono",monospace;font-size:22px;font-weight:700;color:var(--ink)}
+</style>
+</head>
+<body>
+
+<!-- ============ Slide 1: Cover ============ -->
+<section class="slide" id="s1">
+  <div class="cover-deco">
+    <svg viewBox="0 0 520 520" fill="none">
+      <ellipse cx="260" cy="380" rx="220" ry="40" fill="#fff" opacity=".3"/>
+      <path d="M 80 380 Q 260 100, 440 380 Z" fill="none" stroke="#fff" stroke-width="6"/>
+      <line x1="260" y1="100" x2="260" y2="380" stroke="#fff" stroke-width="4"/>
+      <circle cx="260" cy="100" r="14" fill="#fff"/>
+    </svg>
+  </div>
+  <div class="cover-wrap">
+    <div>
+      <div class="cover-kicker">PARABOLIC ANTENNA · TILT ESTIMATION</div>
+    </div>
+    <div>
+      <div class="cover-title">パラボラアンテナの<br>「台座の傾き」を<br>計算で当てる</div>
+      <div class="cover-sub">太陽が像のどこに写るかを 3 回見るだけで、目に見えない傾きを sin と cos で見つけよう。</div>
+      <div class="chips">
+        <div class="chip">中学数学でわかる</div>
+        <div class="chip">三角関数 sin / cos</div>
+        <div class="chip">三平方の定理</div>
+        <div class="chip">連立方程式</div>
+      </div>
+    </div>
+    <div class="cover-foot">
+      <div>parabolic-antenna / pedestal_tilt</div>
+      <div>図解版・中学生向け</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ Slide 2: One-liner ============ -->
+<section class="slide" id="s2">
+  <div class="header">
+    <div class="title-wrap">
+      <div class="bar"></div>
+      <div><div class="t">この授業のひと言</div><div class="st">What we will learn today</div></div>
+    </div>
+    <div class="logo"><div class="dot"></div>PEDESTAL TILT</div>
+  </div>
+  <div class="content">
+    <div class="one-liner">
+      <div class="kicker">KEY IDEA</div>
+      <div class="big">見えない傾きを、<br><span class="em">太陽の動き</span>から当てる。</div>
+      <div class="sub">アンテナの台座は ほんの少しだけ 傾いている。<br>でも、太陽が像のどこに写るかを観察すれば、その「傾き」を計算で 完璧に 言い当てられる。</div>
+    </div>
+  </div>
+  <div class="brandline"><span class="bl-dot"></span>parabolic-antenna</div>
+  <div class="pager">02 / 12</div>
+</section>
+
+<!-- ============ Slide 3: 問題 ============ -->
+<section class="slide" id="s3">
+  <div class="header">
+    <div class="title-wrap">
+      <div class="bar"></div>
+      <div><div class="t">そもそも、何が問題?</div><div class="st">The pedestal is slightly tilted</div></div>
+    </div>
+    <div class="logo"><div class="dot"></div>PEDESTAL TILT</div>
+  </div>
+  <div class="content">
+    <div class="two-col">
+      <div class="left">
+        <span class="tag">問題</span>
+        <div class="lead" style="font-size:30px;font-weight:700;color:var(--ink)">
+          アンテナの 台座 は完全に水平じゃない。<br>
+          ほんの <span style="color:var(--accent);font-weight:900">0.7°</span> ほど傾いている。
+        </div>
+        <div class="lead">
+          「東に 30°、上に 70° を見て」と命令しても、<br>
+          台座が傾いているせいで <strong>少しズレた方向</strong> を見てしまう。
+        </div>
+        <div class="q-card">
+          <div class="qm">?</div>
+          <div>傾きを 直接 測れない。<br>どうやって 傾きの大きさ θ と 向き φ を 知る?</div>
+        </div>
+      </div>
+      <div class="right">
+        <div class="fig-wrap">
+          <div class="fig-area">
+            <svg viewBox="0 0 700 540" width="100%">
+              <!-- ground -->
+              <line x1="60" y1="450" x2="640" y2="450" stroke="#5F6B7A" stroke-width="3"/>
+              <text x="350" y="490" text-anchor="middle" font-size="18" fill="#5F6B7A" font-weight="700">地面 (水平)</text>
+              <!-- ideal vertical -->
+              <line x1="220" y1="450" x2="220" y2="180" stroke="#C7D0DC" stroke-width="3" stroke-dasharray="8 8"/>
+              <text x="225" y="170" font-size="16" fill="#5F6B7A" font-weight="600">本来の<tspan x="225" dy="20">まっすぐ</tspan></text>
+              <!-- tilted antenna pole -->
+              <line x1="220" y1="450" x2="270" y2="180" stroke="#174ECC" stroke-width="9" stroke-linecap="round"/>
+              <!-- dish -->
+              <ellipse cx="270" cy="180" rx="120" ry="24" fill="none" stroke="#174ECC" stroke-width="5"/>
+              <path d="M 150 180 Q 270 60 390 180 Z" fill="#DCE7FF" stroke="#174ECC" stroke-width="4"/>
+              <line x1="270" y1="180" x2="270" y2="100" stroke="#174ECC" stroke-width="4"/>
+              <circle cx="270" cy="100" r="10" fill="#174ECC"/>
+              <!-- base -->
+              <rect x="195" y="445" width="50" height="18" fill="#0B2D7A"/>
+              <!-- tilt arc -->
+              <path d="M 220 280 Q 240 280 245 270" fill="none" stroke="#8A42FF" stroke-width="4"/>
+              <text x="260" y="285" font-size="32" font-weight="900" fill="#8A42FF">θ</text>
+              <!-- arrows hint -->
+              <text x="430" y="220" font-size="22" font-weight="800" fill="#E8820C">← 少し傾いている</text>
+              <!-- compass -->
+              <g transform="translate(560,90)">
+                <circle r="44" fill="#fff" stroke="#5F6B7A" stroke-width="2"/>
+                <text y="-26" text-anchor="middle" font-size="16" font-weight="800" fill="#0F1629">N</text>
+                <text y="36" text-anchor="middle" font-size="16" font-weight="800" fill="#0F1629">S</text>
+                <text x="-32" y="6" text-anchor="middle" font-size="16" font-weight="800" fill="#0F1629">W</text>
+                <text x="32" y="6" text-anchor="middle" font-size="16" font-weight="800" fill="#0F1629">E</text>
+                <line x1="0" y1="0" x2="-22" y2="-22" stroke="#8A42FF" stroke-width="4" stroke-linecap="round"/>
+                <text x="-30" y="-30" font-size="16" font-weight="900" fill="#8A42FF">φ</text>
+              </g>
+            </svg>
+          </div>
+          <div class="diag-cap">θ = 傾きの 大きさ / φ = 傾きの 向き(方位)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="brandline"><span class="bl-dot"></span>parabolic-antenna</div>
+  <div class="pager">03 / 12</div>
+</section>
+
+<!-- ============ Slide 4: 太陽は時刻で動く ============ -->
+<section class="slide" id="s4">
+  <div class="header">
+    <div class="title-wrap">
+      <div class="bar"></div>
+      <div><div class="t">太陽は 時刻で動く</div><div class="st">3 時刻 = 3 つの観測点</div></div>
+    </div>
+    <div class="logo"><div class="dot"></div>PEDESTAL TILT</div>
+  </div>
+  <div class="content">
+    <div class="two-col" style="grid-template-columns:1.2fr 1fr">
+      <div class="right" style="order:1">
+        <div class="fig-wrap">
+          <div class="fig-area">
+            <svg viewBox="0 0 760 540" width="100%">
+              <!-- ground -->
+              <line x1="40" y1="460" x2="720" y2="460" stroke="#5F6B7A" stroke-width="3"/>
+              <text x="50" y="490" font-size="16" fill="#5F6B7A" font-weight="700">東 (E)</text>
+              <text x="380" y="490" text-anchor="middle" font-size="16" fill="#5F6B7A" font-weight="700">南 (S)</text>
+              <text x="710" y="490" text-anchor="end" font-size="16" fill="#5F6B7A" font-weight="700">西 (W)</text>
+              <!-- arc -->
+              <path d="M 80 460 Q 380 60 680 460" fill="none" stroke="#F5A623" stroke-width="4" stroke-dasharray="10 8"/>
+              <!-- 9時 -->
+              <g transform="translate(170,322)">
+                <circle r="34" fill="#F5A623"/>
+                <circle r="34" fill="#FFE4A8" opacity=".5"/>
+                <text y="6" text-anchor="middle" font-size="22" font-weight="900" fill="#fff">9</text>
+              </g>
+              <text x="170" y="265" text-anchor="middle" font-size="18" font-weight="800" fill="#7A4C00">9 時</text>
+              <text x="170" y="290" text-anchor="middle" font-size="14" fill="#7A4C00">東 / 高さ 30°</text>
+              <!-- 12時 -->
+              <g transform="translate(380,140)">
+                <circle r="40" fill="#F5A623"/>
+                <circle r="40" fill="#FFE4A8" opacity=".5"/>
+                <text y="8" text-anchor="middle" font-size="24" font-weight="900" fill="#fff">12</text>
+              </g>
+              <text x="380" y="80" text-anchor="middle" font-size="18" font-weight="800" fill="#7A4C00">12 時 (南中)</text>
+              <text x="380" y="105" text-anchor="middle" font-size="14" fill="#7A4C00">南 / 高さ 70°</text>
+              <!-- 15時 -->
+              <g transform="translate(590,322)">
+                <circle r="34" fill="#F5A623"/>
+                <circle r="34" fill="#FFE4A8" opacity=".5"/>
+                <text y="6" text-anchor="middle" font-size="22" font-weight="900" fill="#fff">15</text>
+              </g>
+              <text x="590" y="265" text-anchor="middle" font-size="18" font-weight="800" fill="#7A4C00">15 時</text>
+              <text x="590" y="290" text-anchor="middle" font-size="14" fill="#7A4C00">西 / 高さ 30°</text>
+              <!-- antenna -->
+              <line x1="380" y1="460" x2="380" y2="430" stroke="#174ECC" stroke-width="6"/>
+              <ellipse cx="380" cy="430" rx="34" ry="8" fill="#174ECC"/>
+            </svg>
+          </div>
+          <div class="diag-cap">3 つの 違う方向 から太陽を撮る = 立体的な手がかりが集まる</div>
+        </div>
+      </div>
+      <div class="left" style="order:0">
+        <span class="tag s">アイデア</span>
+        <div class="lead" style="font-size:30px;font-weight:700;color:var(--ink)">
+          1 日 3 回、太陽を撮影する。
+        </div>
+        <div class="blist">
+          <div class="bi"><span style="font-weight:800;color:var(--primary)">9 時</span> &nbsp; 太陽は 東 にある (方位 90°、高さ 30°)</div>
+          <div class="bi"><span style="font-weight:800;color:var(--primary)">12 時</span> &nbsp; 太陽は 真南 (方位 180°、高さ 70°)</div>
+          <div class="bi"><span style="font-weight:800;color:var(--primary)">15 時</span> &nbsp; 太陽は 西 (方位 270°、高さ 30°)</div>
+        </div>
+        <div class="lead" style="margin-top:8px">
+          太陽の 真の位置 は 天文計算 で正確にわかる。<br>
+          これが 「答えがわかってる入力」 になる。
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="brandline"><span class="bl-dot"></span>parabolic-antenna</div>
+  <div class="pager">04 / 12</div>
+</section>
+
+<!-- ============ Slide 5: 像はどうずれる? ============ -->
+<section class="slide" id="s5">
+  <div class="header">
+    <div class="title-wrap">
+      <div class="bar"></div>
+      <div><div class="t">傾きで「像」はどうズレる?</div><div class="st">Image-plane offset under tilt</div></div>
+    </div>
+    <div class="logo"><div class="dot"></div>PEDESTAL TILT</div>
+  </div>
+  <div class="content">
+    <div class="two-col">
+      <div class="left">
+        <span class="tag a">観察</span>
+        <div class="lead" style="font-size:28px;font-weight:700;color:var(--ink)">
+          台座が 傾いている と、<br>
+          太陽は 像の中央に来ない。
+        </div>
+        <div class="blist accent">
+          <div class="bi">中央から <strong>たて</strong> にずれる量を Δh (デルタ・エイチ)</div>
+          <div class="bi">中央から <strong>よこ</strong> にずれる量を Δa·cos(h)</div>
+        </div>
+        <div class="lead">
+          このズレは 写真を見れば測れる。<br>
+          実は、ズレは 太陽の方向 と 台座の傾き で きれいに決まる。
+        </div>
+        <div class="formula compact">
+          Δh = θ · cos(<span class="k">a</span> − <span class="v">φ</span>)
+        </div>
+        <div class="formula-sub">a = 太陽の方位、φ = 傾きの方位、θ = 傾きの大きさ</div>
+      </div>
+      <div class="right">
+        <div class="fig-wrap">
+          <div class="fig-area">
+            <svg viewBox="0 0 600 540" width="100%">
+              <!-- camera frame -->
+              <rect x="60" y="60" width="480" height="420" rx="14" fill="#0F1629"/>
+              <rect x="80" y="80" width="440" height="380" rx="8" fill="#1F2A44"/>
+              <!-- crosshair -->
+              <line x1="80" y1="270" x2="520" y2="270" stroke="#5F6B7A" stroke-width="1.5" stroke-dasharray="6 6"/>
+              <line x1="300" y1="80" x2="300" y2="460" stroke="#5F6B7A" stroke-width="1.5" stroke-dasharray="6 6"/>
+              <text x="510" y="285" text-anchor="end" font-size="14" fill="#8A95A8" font-weight="700">画像中央</text>
+              <!-- ideal sun (center) ghost -->
+              <circle cx="300" cy="270" r="22" fill="none" stroke="#5F6B7A" stroke-width="2" stroke-dasharray="4 4"/>
+              <text x="300" y="246" text-anchor="middle" font-size="13" fill="#8A95A8" font-weight="700">本来ここ</text>
+              <!-- actual sun displaced -->
+              <circle cx="378" cy="332" r="34" fill="#F5A623"/>
+              <circle cx="378" cy="332" r="34" fill="#FFE4A8" opacity=".5"/>
+              <text x="378" y="340" text-anchor="middle" font-size="20" font-weight="900" fill="#fff">☀</text>
+              <!-- offset arrows -->
+              <line x1="300" y1="270" x2="378" y2="270" stroke="#8A42FF" stroke-width="3"/>
+              <polygon points="378,270 370,266 370,274" fill="#8A42FF"/>
+              <text x="338" y="262" text-anchor="middle" font-size="18" font-weight="900" fill="#8A42FF">Δa·cos(h)</text>
+              <line x1="378" y1="270" x2="378" y2="332" stroke="#12A07F" stroke-width="3"/>
+              <polygon points="378,332 374,324 382,324" fill="#12A07F"/>
+              <text x="408" y="306" font-size="18" font-weight="900" fill="#12A07F">Δh</text>
+              <!-- caption -->
+              <text x="300" y="510" text-anchor="middle" font-size="16" font-weight="700" fill="#5F6B7A">アンテナのカメラ画像 (模式図)</text>
+            </svg>
+          </div>
+          <div class="diag-cap">Δh と Δa·cos(h) を 写真から 測る</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="brandline"><span class="bl-dot"></span>parabolic-antenna</div>
+  <div class="pager">05 / 12</div>
+</section>
+
+<!-- ============ Slide 6: sin/cos で書ける ============ -->
+<section class="slide" id="s6">
+  <div class="header">
+    <div class="title-wrap">
+      <div class="bar"></div>
+      <div><div class="t">ズレは sin と cos で書ける</div><div class="st">The key formula</div></div>
+    </div>
+    <div class="logo"><div class="dot"></div>PEDESTAL TILT</div>
+  </div>
+  <div class="content">
+    <div class="two-col" style="grid-template-columns:1.1fr 1fr">
+      <div class="left">
+        <span class="tag">公式</span>
+        <div class="lead" style="font-size:28px;font-weight:700;color:var(--ink)">
+          太陽の方位 a と 傾きの方位 φ。<br>
+          この 「ずれ角」 a − φ を使うと、<br>
+          像のズレは とてもキレイに 書ける。
+        </div>
+        <div class="formula">
+          Δh &nbsp; = &nbsp; θ · cos(<span class="k">a</span> − <span class="v">φ</span>)<br>
+          <span style="font-size:.85em">Δa·cos(h) = θ · sin(<span class="k">a</span> − <span class="v">φ</span>) · sin(h)</span>
+        </div>
+        <div class="lead">
+          中学の <strong>sin / cos</strong> で扱える式。<br>
+          でも未知数が θ と φ の <strong>2 つ</strong> あるので、<br>
+          このままだと解きにくい…
+        </div>
+      </div>
+      <div class="right">
+        <div class="fig-wrap">
+          <div class="fig-area">
+            <svg viewBox="0 0 560 540" width="100%">
+              <!-- ground compass -->
+              <circle cx="280" cy="280" r="200" fill="#fff" stroke="#E3E8F0" stroke-width="2"/>
+              <line x1="280" y1="80" x2="280" y2="480" stroke="#E3E8F0" stroke-width="1"/>
+              <line x1="80" y1="280" x2="480" y2="280" stroke="#E3E8F0" stroke-width="1"/>
+              <text x="280" y="68" text-anchor="middle" font-size="16" font-weight="800" fill="#5F6B7A">N (0°)</text>
+              <text x="490" y="285" font-size="16" font-weight="800" fill="#5F6B7A">E (90°)</text>
+              <text x="280" y="500" text-anchor="middle" font-size="16" font-weight="800" fill="#5F6B7A">S (180°)</text>
+              <text x="60" y="285" text-anchor="end" font-size="16" font-weight="800" fill="#5F6B7A">W (270°)</text>
+              <!-- center -->
+              <circle cx="280" cy="280" r="6" fill="#0F1629"/>
+              <!-- φ direction (NW, 315°) -->
+              <line x1="280" y1="280" x2="139" y2="139" stroke="#8A42FF" stroke-width="5" stroke-linecap="round"/>
+              <polygon points="139,139 156,148 148,156" fill="#8A42FF"/>
+              <text x="120" y="125" font-size="22" font-weight="900" fill="#8A42FF">傾き φ</text>
+              <!-- sun direction a (E, 90°) -->
+              <line x1="280" y1="280" x2="450" y2="280" stroke="#F5A623" stroke-width="5" stroke-linecap="round"/>
+              <polygon points="450,280 442,275 442,285" fill="#F5A623"/>
+              <text x="430" y="265" text-anchor="end" font-size="20" font-weight="900" fill="#7A4C00">太陽 a</text>
+              <!-- arc between -->
+              <path d="M 380 280 A 100 100 0 0 0 309 209" fill="none" stroke="#174ECC" stroke-width="3"/>
+              <text x="392" y="216" font-size="20" font-weight="900" fill="#174ECC">a − φ</text>
+            </svg>
+          </div>
+          <div class="diag-cap">a − φ = 「太陽の方向 と 傾きの方向 の角度差」</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="brandline"><span class="bl-dot"></span>parabolic-antenna</div>
+  <div class="pager">06 / 12</div>
+</section>
+
+<!-- ============ Slide 7: p, q に分ける ============ -->
+<section class="slide" id="s7">
+  <div class="header">
+    <div class="title-wrap">
+      <div class="bar"></div>
+      <div><div class="t">テクニック: 2 つの数 p と q に分ける</div><div class="st">Linearization with p, q</div></div>
+    </div>
+    <div class="logo"><div class="dot"></div>PEDESTAL TILT</div>
+  </div>
+  <div class="content">
+    <div class="two-col">
+      <div class="left">
+        <span class="tag a">トリック</span>
+        <div class="lead" style="font-size:28px;font-weight:700;color:var(--ink)">
+          θ と φ を 直接 求めず、<br>
+          こういう 2 つの数 を求める。
+        </div>
+        <div class="formula">
+          <span class="k">p</span> &nbsp;=&nbsp; θ · cos(φ)<br>
+          <span class="v">q</span> &nbsp;=&nbsp; θ · sin(φ)
+        </div>
+        <div class="lead">
+          <strong>cos の加法定理</strong> を使うと、ズレの式が p, q の <strong>1 次式</strong>(掛け算が直線的な式)になる:
+        </div>
+        <div class="formula compact">
+          Δh = <span class="k">p</span> · cos(a) + <span class="v">q</span> · sin(a)
+        </div>
+        <div class="lead">
+          → これなら <strong>連立方程式</strong> で解ける!
+        </div>
+      </div>
+      <div class="right">
+        <div class="fig-wrap">
+          <div class="fig-area">
+            <svg viewBox="0 0 560 540" width="100%">
+              <!-- axes -->
+              <line x1="80" y1="460" x2="500" y2="460" stroke="#5F6B7A" stroke-width="2"/>
+              <line x1="280" y1="80" x2="280" y2="460" stroke="#5F6B7A" stroke-width="2"/>
+              <polygon points="500,460 490,455 490,465" fill="#5F6B7A"/>
+              <polygon points="280,80 275,90 285,90" fill="#5F6B7A"/>
+              <text x="510" y="464" font-size="20" font-weight="800" fill="#5F6B7A">p</text>
+              <text x="290" y="78" font-size="20" font-weight="800" fill="#5F6B7A">q</text>
+              <text x="280" y="478" text-anchor="middle" font-size="14" fill="#5F6B7A">0</text>
+              <!-- vector to (p,q) -->
+              <line x1="280" y1="460" x2="430" y2="280" stroke="#174ECC" stroke-width="6" stroke-linecap="round"/>
+              <polygon points="430,280 420,278 426,288" fill="#174ECC"/>
+              <!-- p projection -->
+              <line x1="280" y1="460" x2="430" y2="460" stroke="#E8820C" stroke-width="4" stroke-dasharray="6 6"/>
+              <line x1="430" y1="460" x2="430" y2="280" stroke="#12A07F" stroke-width="4" stroke-dasharray="6 6"/>
+              <!-- arc theta -->
+              <path d="M 360 460 A 80 80 0 0 0 333 412" fill="none" stroke="#8A42FF" stroke-width="3"/>
+              <text x="356" y="430" font-size="20" font-weight="900" fill="#8A42FF">φ</text>
+              <!-- labels -->
+              <text x="355" y="478" text-anchor="middle" font-size="20" font-weight="800" fill="#E8820C">p = θ cos φ</text>
+              <text x="446" y="380" font-size="20" font-weight="800" fill="#12A07F">q = θ sin φ</text>
+              <text x="345" y="370" font-size="22" font-weight="900" fill="#174ECC">θ</text>
+              <circle cx="430" cy="280" r="8" fill="#174ECC"/>
+              <text x="442" y="276" font-size="18" font-weight="800" fill="#174ECC">(p, q)</text>
+            </svg>
+          </div>
+          <div class="diag-cap">「斜めの矢印 (θ, φ)」 を 「たて (q) と よこ (p)」 に分解</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="brandline"><span class="bl-dot"></span>parabolic-antenna</div>
+  <div class="pager">07 / 12</div>
+</section>
+
+<!-- ============ Slide 8: 3 観測 → 連立方程式 ============ -->
+<section class="slide" id="s8">
+  <div class="header">
+    <div class="title-wrap">
+      <div class="bar"></div>
+      <div><div class="t">3 回の観測を 連立方程式 にする</div><div class="st">3 equations, 2 unknowns</div></div>
+    </div>
+    <div class="logo"><div class="dot"></div>PEDESTAL TILT</div>
+  </div>
+  <div class="content">
+    <div style="display:flex;flex-direction:column;gap:24px;height:100%">
+      <div class="lead" style="font-size:26px;font-weight:600">
+        実測したズレ Δh を 3 回ぶん 集めると、こうなる:
+      </div>
+      <div class="eq-tbl">
+        <div class="eq-row">
+          <div class="lbl">9 時</div>
+          <div class="ex">−0.5° &nbsp;=&nbsp; <span style="color:#E8820C">p</span> · cos(90°) + <span style="color:#12A07F">q</span> · sin(90°) &nbsp;&nbsp;<span style="color:#5F6B7A">→ &nbsp;−0.5 = q</span></div>
+        </div>
+        <div class="eq-row">
+          <div class="lbl">12 時</div>
+          <div class="ex">−0.5° &nbsp;=&nbsp; <span style="color:#E8820C">p</span> · cos(180°) + <span style="color:#12A07F">q</span> · sin(180°) &nbsp;&nbsp;<span style="color:#5F6B7A">→ &nbsp;−0.5 = −p</span></div>
+        </div>
+        <div class="eq-row">
+          <div class="lbl">15 時</div>
+          <div class="ex">+0.5° &nbsp;=&nbsp; <span style="color:#E8820C">p</span> · cos(270°) + <span style="color:#12A07F">q</span> · sin(270°) &nbsp;&nbsp;<span style="color:#5F6B7A">→ &nbsp;+0.5 = −q</span></div>
+        </div>
+      </div>
+      <div class="two-col" style="grid-template-columns:1fr 1fr;gap:32px">
+        <div class="left" style="justify-content:flex-start">
+          <span class="tag s">解</span>
+          <div class="formula">
+            <span class="k">p</span> = +0.5 &nbsp;&nbsp;,&nbsp;&nbsp; <span class="v">q</span> = −0.5
+          </div>
+          <div class="lead" style="font-size:22px">
+            式が 3 本あって 未知数は 2 つ。<br>
+            少し多いので、<strong>最小二乗法</strong> で<br>
+            「いちばん辻褄が合う p, q」を選ぶ。
+          </div>
+        </div>
+        <div class="right" style="justify-content:flex-start">
+          <div class="q-card" style="background:linear-gradient(135deg,#F3ECFF,#EEF3FF);border-color:#D7C9FF;color:#0F1629">
+            <div class="qm" style="color:#8A42FF">!</div>
+            <div style="font-size:22px;font-weight:600;line-height:1.55">
+              「観測が 3 回 = 式が 3 本」<br>
+              「未知数は 2 つ」 なので、<br>
+              ぴったり 1 つ の答えに 絞り込める。
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="brandline"><span class="bl-dot"></span>parabolic-antenna</div>
+  <div class="pager">08 / 12</div>
+</section>
+
+<!-- ============ Slide 9: θ と φ に戻す ============ -->
+<section class="slide" id="s9">
+  <div class="header">
+    <div class="title-wrap">
+      <div class="bar"></div>
+      <div><div class="t">p, q を θ と φ に戻す</div><div class="st">Pythagorean theorem + atan2</div></div>
+    </div>
+    <div class="logo"><div class="dot"></div>PEDESTAL TILT</div>
+  </div>
+  <div class="content">
+    <div class="two-col">
+      <div class="left">
+        <span class="tag s">最後の一手</span>
+        <div class="lead" style="font-size:28px;font-weight:700;color:var(--ink)">
+          p, q が出れば、θ と φ は<br>
+          中学数学で すぐに 戻せる。
+        </div>
+        <div class="formula">
+          <span style="color:#174ECC">θ</span> = √( <span class="k">p</span>² + <span class="v">q</span>² ) &nbsp; <span class="c">← 三平方の定理</span><br>
+          <span style="color:#174ECC">φ</span> = arctan( <span class="v">q</span> / <span class="k">p</span> ) &nbsp; <span class="c">← 角度に戻す (atan2)</span>
+        </div>
+        <div class="lead">
+          直角三角形の <strong>斜辺</strong> が θ、<br>
+          <strong>傾いた角度</strong> が φ。
+        </div>
+        <div class="lead" style="font-size:22px;color:var(--muted)">
+          ※ コードでは <code style="background:#F5F7FB;padding:4px 10px;border-radius:6px;font-family:'JetBrains Mono'">math.hypot(p,q)</code> と <code style="background:#F5F7FB;padding:4px 10px;border-radius:6px;font-family:'JetBrains Mono'">math.atan2(q,p)</code> を使う。
+        </div>
+      </div>
+      <div class="right">
+        <div class="fig-wrap">
+          <div class="fig-area">
+            <svg viewBox="0 0 560 540" width="100%">
+              <!-- right triangle p,q,theta -->
+              <line x1="100" y1="430" x2="440" y2="430" stroke="#E8820C" stroke-width="6" stroke-linecap="round"/>
+              <line x1="440" y1="430" x2="440" y2="170" stroke="#12A07F" stroke-width="6" stroke-linecap="round"/>
+              <line x1="100" y1="430" x2="440" y2="170" stroke="#174ECC" stroke-width="7" stroke-linecap="round"/>
+              <!-- right angle marker -->
+              <rect x="420" y="410" width="20" height="20" fill="none" stroke="#5F6B7A" stroke-width="2"/>
+              <!-- labels -->
+              <text x="270" y="465" text-anchor="middle" font-size="26" font-weight="900" fill="#E8820C">p</text>
+              <text x="465" y="305" font-size="26" font-weight="900" fill="#12A07F">q</text>
+              <text x="240" y="285" font-size="32" font-weight="900" fill="#174ECC">θ</text>
+              <!-- phi arc -->
+              <path d="M 180 430 A 80 80 0 0 0 156 388" fill="none" stroke="#8A42FF" stroke-width="4"/>
+              <text x="190" y="408" font-size="24" font-weight="900" fill="#8A42FF">φ</text>
+              <!-- caption -->
+              <text x="280" y="510" text-anchor="middle" font-size="18" font-weight="700" fill="#5F6B7A">θ² = p² + q² &nbsp;&nbsp;(三平方の定理)</text>
+            </svg>
+          </div>
+          <div class="diag-cap">底辺 p、高さ q、斜辺 θ、底角 φ の 直角三角形</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="brandline"><span class="bl-dot"></span>parabolic-antenna</div>
+  <div class="pager">09 / 12</div>
+</section>
+
+<!-- ============ Slide 10: 答え合わせ ============ -->
+<section class="slide" id="s10">
+  <div class="header">
+    <div class="title-wrap">
+      <div class="bar"></div>
+      <div><div class="t">答え合わせ</div><div class="st">Plug in the numbers</div></div>
+    </div>
+    <div class="logo"><div class="dot"></div>PEDESTAL TILT</div>
+  </div>
+  <div class="content">
+    <div style="display:flex;flex-direction:column;gap:36px;height:100%">
+      <div class="lead" style="font-size:26px;font-weight:600">
+        さっきの p = 0.5、 q = −0.5 を入れてみよう。
+      </div>
+      <div class="tiles">
+        <div class="tile">
+          <div class="lbl">傾きの大きさ θ</div>
+          <div class="val">0.7071°</div>
+          <div class="desc">√(0.5² + (−0.5)²) = √0.5<br>= だいたい <strong>0.71°</strong></div>
+        </div>
+        <div class="tile">
+          <div class="lbl">傾きの方位 φ</div>
+          <div class="val">315°</div>
+          <div class="desc">arctan(−0.5 / 0.5) = −45°<br>+ 360° = <strong>315°</strong> (= 北西)</div>
+        </div>
+        <div class="tile">
+          <div class="lbl">方角ラベル</div>
+          <div class="val">NW</div>
+          <div class="desc">台座は <strong>北西方向に</strong><br>0.71° 倒れている</div>
+        </div>
+      </div>
+      <div class="two-col" style="grid-template-columns:1.1fr 1fr">
+        <div class="left">
+          <span class="tag a">確かめ算</span>
+          <div class="lead" style="font-size:22px">
+            この θ, φ を <strong>逆向き</strong> に補正式に入れて、<br>
+            指令値 を計算 → 実際に向く方向を再計算 →<br>
+            <strong>太陽の真の位置 と一致</strong> する!
+          </div>
+          <div class="formula compact" style="font-size:22px">
+            残差 ≈ <span class="k">0.000000°</span> &nbsp;<span class="c">(ぴったり)</span>
+          </div>
+        </div>
+        <div class="right">
+          <div class="fig-wrap">
+            <div class="fig-area" style="padding:20px">
+              <svg viewBox="0 0 460 360" width="100%">
+                <circle cx="230" cy="180" r="140" fill="#fff" stroke="#E3E8F0" stroke-width="2"/>
+                <text x="230" y="34" text-anchor="middle" font-size="14" font-weight="800" fill="#5F6B7A">N</text>
+                <text x="386" y="186" font-size="14" font-weight="800" fill="#5F6B7A">E</text>
+                <text x="230" y="338" text-anchor="middle" font-size="14" font-weight="800" fill="#5F6B7A">S</text>
+                <text x="74" y="186" text-anchor="end" font-size="14" font-weight="800" fill="#5F6B7A">W</text>
+                <line x1="230" y1="180" x2="131" y2="81" stroke="#8A42FF" stroke-width="6" stroke-linecap="round"/>
+                <polygon points="131,81 148,90 140,98" fill="#8A42FF"/>
+                <circle cx="230" cy="180" r="6" fill="#0F1629"/>
+                <text x="100" y="68" font-size="20" font-weight="900" fill="#8A42FF">NW (315°)</text>
+                <text x="230" y="208" text-anchor="middle" font-size="16" font-weight="700" fill="#5F6B7A">傾き 0.71°</text>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="brandline"><span class="bl-dot"></span>parabolic-antenna</div>
+  <div class="pager">10 / 12</div>
+</section>
+
+<!-- ============ Slide 11: まとめ ============ -->
+<section class="slide" id="s11">
+  <div class="header">
+    <div class="title-wrap">
+      <div class="bar"></div>
+      <div><div class="t">まとめ</div><div class="st">What we did, in 4 steps</div></div>
+    </div>
+    <div class="logo"><div class="dot"></div>PEDESTAL TILT</div>
+  </div>
+  <div class="content">
+    <div style="display:flex;flex-direction:column;gap:36px;height:100%;justify-content:center">
+      <div class="one-liner" style="height:auto;gap:14px">
+        <div class="kicker">SUMMARY</div>
+        <div class="big" style="font-size:84px">見えない傾きを、<span class="em">数学</span>で見つけた。</div>
+      </div>
+      <div class="steps">
+        <div class="step-card">
+          <div class="sn">STEP 1</div>
+          <div class="stl">3 回 太陽を撮る</div>
+          <div class="sdesc">9時・12時・15時。太陽の真の位置は天文計算でわかる。</div>
+        </div>
+        <div class="step-card">
+          <div class="sn">STEP 2</div>
+          <div class="stl">像のズレを式にする</div>
+          <div class="sdesc">Δh = θ cos(a−φ)。sin と cos と加法定理だけ。</div>
+        </div>
+        <div class="step-card">
+          <div class="sn">STEP 3</div>
+          <div class="stl">p, q の連立方程式</div>
+          <div class="sdesc">p = θ cosφ, q = θ sinφ で 1 次式に変換。連立して解く。</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:30px">
+        <div class="step-card">
+          <div class="sn" style="background:#8A42FF">STEP 4</div>
+          <div class="stl">θ = √(p²+q²)、 φ = arctan(q/p)</div>
+          <div class="sdesc">三平方の定理 と arctan で 元の傾きパラメータに戻す。今回の答えは <strong>θ ≈ 0.71°、φ = 315° (北西)</strong>。</div>
+        </div>
+        <div class="step-card" style="background:linear-gradient(135deg,#F3ECFF,#EEF3FF);border-color:#D7C9FF">
+          <div class="sn" style="background:#12A07F">TAKEAWAY</div>
+          <div class="stl">中学数学で「測れないもの」が測れる</div>
+          <div class="sdesc">三角関数 + 連立方程式 + 三平方の定理。たった 3 つの道具でも、巨大なアンテナの 0.7° の傾き が言い当てられる。</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="brandline"><span class="bl-dot"></span>parabolic-antenna</div>
+  <div class="pager">11 / 12</div>
+</section>
+
+<!-- ============ Slide 12: Thank you ============ -->
+<section class="slide" id="s12">
+  <div class="ty-wrap">
+    <div class="ty-big">Thank you.</div>
+    <div class="ty-sub">
+      パラボラアンテナの台座傾き推定 ―<br>
+      sin・cos・三平方の定理 で世界を測る、その第一歩。
+    </div>
+  </div>
+</section>
+
+</body>
+</html>
