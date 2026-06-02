@@ -4,17 +4,19 @@
 # sim
 
 ## Purpose
-3軸(Az–El–XEl)マウントのインタラクティブ 3D シミュレーション。
-`pedestal_tilt/three_axis.py` の運動学を可視化し、天頂キーホール(2軸で方位が
-ほぼ180°振れる)が第3軸(クロスエレベーション)で消えることを実演する。
-自己完結 HTML 1枚 + Three.js(CDN)。Python 側にビューワ用の外部依存は足さない方針。
+パラボラアンテナ機構のインタラクティブ 3D シミュレーション群(自己完結 HTML + Three.js CDN、
+Python 側にビューワ用の外部依存は足さない方針)。2つの HTML がある:
+- `antenna3d.html`: 3軸(Az–El–XEl)回転ジンバルの概念モデル。天頂キーホールと第3軸での除去を実演。
+- `tripod3d.html`: 写真の**実機準拠**。中央支点＋3本リニアアクチュエータのパラレル機構で、皿姿勢→脚長と到達円錐を可視化。
+いずれも運動学 JS は `pedestal_tilt/` の厳密移植で、起動時に Python 由来 golden と突き合わせる。
 
 ## Key Files
 | File | Description |
 |------|-------------|
-| `antenna3d.html` | 本体。Three.js r184 を ESM importmap(jsdelivr)で読む単一ファイル。運動学 JS は `three_axis.py` の厳密移植。手動(関節操作)/衛星パス追尾(2軸 vs 3軸)を切替。軌道プリセット＋山頂仰角/方位スライダー＋GEO、3軸の角度 vs 時間グラフ(Az/El/XEl同時)、回転軸の3D描画を備える。起動時に自己テスト(golden値・不変条件・パス総移動量・軌道parity・描画整合)を実行しバッジ表示 |
-| `gen_golden.py` | `antenna3d.html` 内の自己テスト golden 値(`GOLD_FWD`/`GOLD_HOLD`/パス総移動量/`GOLD_ORBIT`)を再生成。`three_axis.py` の数式を変えたら実行して HTML に貼り替える |
-| `preview.png` / `preview-chart.png` | スクリーンショット(3D＋回転軸 / 3軸時系列グラフ)(README 用) |
+| `antenna3d.html` | 3軸(Az–El–XEl)回転ジンバルの概念シム。Three.js r184 を ESM importmap(jsdelivr)で読む単一ファイル。運動学 JS は `three_axis.py` の厳密移植。手動(関節操作)/衛星パス追尾(2軸 vs 3軸)を切替。軌道プリセット＋山頂仰角/方位スライダー＋GEO、3軸の角度 vs 時間グラフ(Az/El/XEl同時)、回転軸の3D描画、XEl中立トグルを備える。起動時に自己テスト(golden値・不変条件・パス総移動量・軌道parity・中立中央・描画整合)を実行しバッジ表示 |
+| `tripod3d.html` | **実機準拠**の3本リニアアクチュエータ(パラレル機構)シム。運動学 JS は `actuator_tripod.py` の厳密移植。皿の指向に合わせて3本のアクチュエータが伸縮、脚長 L1/L2/L3 vs 時間グラフ(ストローク帯・超過フラグ)、到達円錐を描画。機構寸法(H/rb/rp/ストローク)はスライダー調整可。起動時に脚長 golden を Python と突き合わせ。 |
+| `gen_golden.py` | 両シムの自己テスト golden 値を再生成(`antenna3d.html` 用 `GOLD_FWD`/`GOLD_HOLD`/`GOLD_ORBIT`/パス総移動量/`GOLD_XEL`、`tripod3d.html` 用 `GOLD`=脚長)。`pedestal_tilt/` の数式を変えたら実行して各 HTML に貼り替える |
+| `preview*.png` | スクリーンショット(3D＋回転軸 / 3軸時系列 / XEl可動域 / 3本アクチュエータ機構)(README 用) |
 
 ## For AI Agents
 

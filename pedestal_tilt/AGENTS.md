@@ -11,10 +11,11 @@
 ## Key Files
 | File | Description |
 |------|-------------|
-| `__init__.py` | 公開 API のバレル(2軸: `Observation`, `fit_tilt`, `correction`, `forward_pointing`, `image_offset`, `tilt_rotation_matrix` / 3軸: `forward_3axis`, `ik_3axis`, `ik_3axis_hold`, `plan_pass`, `max_azimuth_step` / 可動域: `JointLimits`, `within_limits`, `pass_fits_limits`, `peak_abs_xel`) |
+| `__init__.py` | 公開 API のバレル(2軸: `Observation`, `fit_tilt`, `correction`, `forward_pointing`, `image_offset`, `tilt_rotation_matrix` / 3軸: `forward_3axis`, `ik_3axis`, `ik_3axis_hold`, `plan_pass`, `max_azimuth_step` / 可動域: `JointLimits`, `within_limits`, `pass_fits_limits`, `peak_abs_xel` / パラレル機構: `TripodGeometry`, `leg_lengths`, `reachable`, `max_zenith_distance` 他) |
 | `geometry.py` | 順問題・像ずれ・補正計算。`tilt_rotation_matrix`(Rodrigues 公式による厳密 3D 回転)、`forward_pointing`、`image_offset`(線形近似)、`correction`(線形近似) |
 | `solver.py` | 観測データから (θ_t, φ_t) を最小二乗推定。`Observation` データクラス、`fit_tilt`、内部 `_solve_2x2` |
 | `three_axis.py` | 3軸(Az–El–XEl)マウントの運動学。`forward_3axis`(順, ξ=0 で `forward_pointing` に一致)、`ik_3axis`/`ik_3axis_hold`(逆, 方位保持で冗長性解決)、`plan_pass`(パスの関節指令列)、`max_azimuth_step`。天頂キーホール除去。関節可動域: `JointLimits`(XEl既定[-45,45]=中立中央), `within_limits`/`pass_fits_limits`/`peak_abs_xel`。 |
+| `actuator_tripod.py` | 実機の **3本リニアアクチュエータ(パラレル機構)** の運動学。`TripodGeometry`(寸法), `leg_lengths`(指向→3脚長の逆運動学, `tilt_rotation_matrix` を流用), `base_point`/`platform_point`, `reachable`/`legs_within_stroke`, `max_zenith_distance`(到達円錐の半角)。回転ジンバルの天頂キーホールではなく**円錐状ワークスペース**が制約。 |
 
 ## For AI Agents
 

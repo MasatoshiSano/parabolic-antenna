@@ -1,9 +1,10 @@
-"""antenna3d.html の自己テスト用 golden 値を再生成する。
+"""シムの自己テスト用 golden 値を再生成する。
 
-`pedestal_tilt/three_axis.py` の運動学を変更したら、本スクリプトを実行して
-標準出力の `GOLD_FWD` / `GOLD_HOLD` リテラルとパス総移動量コメントを
-`sim/antenna3d.html` の対応箇所に貼り替える(HTML の JS 実装が Python と
-一致していることを保証する突き合わせデータ)。
+`pedestal_tilt/` の運動学を変更したら本スクリプトを実行し、標準出力の
+リテラルを各 HTML の自己テストに貼り替える(JS 実装が Python と一致している
+ことを保証する突き合わせデータ):
+- `antenna3d.html`  ← `GOLD_FWD` / `GOLD_HOLD` / `GOLD_ORBIT` / パス総移動量 / GOLD_XEL
+- `tripod3d.html`   ← `GOLD`(3本アクチュエータの脚長)
 
     python3 sim/gen_golden.py      # リポジトリルートから
 
@@ -17,7 +18,13 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from pedestal_tilt import forward_3axis, ik_3axis_hold, plan_pass
+from pedestal_tilt import (
+    forward_3axis,
+    ik_3axis_hold,
+    leg_lengths,
+    max_zenith_distance,
+    plan_pass,
+)
 from pedestal_tilt.geometry import _altaz_to_unit, _unit_to_altaz
 
 
@@ -119,6 +126,16 @@ def main() -> None:
         f"// GOLD_XEL default-pass: peakAbs={peak:.4f} minXel={min(pc):.4f} maxXel={max(pc):.4f}"
         f"  → 中央[-45,45]可:{peak < 45}  端[0,90]不可:{min(pc) < 0}"
     )
+
+    # --- tripod3d.html: 3本アクチュエータの脚長 golden(既定寸法) ---
+    print("\n// ---- tripod3d.html: const GOLD = {...} ----")
+    print("const GOLD={ // (a,h)->[L1,L2,L3]  (既定寸法)")
+    for a, h in [(0, 90), (0, 70), (90, 75), (180, 60), (270, 80)]:
+        L = leg_lengths(float(a), float(h))
+        print(f'  "{a},{h}":[{L[0]:.6f},{L[1]:.6f},{L[2]:.6f}],')
+    print("};")
+    beta = max_zenith_distance()
+    print(f"// tripod 到達円錐(全方位)半角 β = {beta:.0f}° (仰角 {90 - beta:.0f}°以上)")
 
 
 if __name__ == "__main__":

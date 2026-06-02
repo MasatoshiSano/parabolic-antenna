@@ -26,6 +26,13 @@ from pedestal_tilt import (
     within_limits,
 )
 from pedestal_tilt.geometry import _altaz_to_unit, _unit_to_altaz
+from pedestal_tilt import (
+    TripodGeometry,
+    home_length,
+    leg_lengths,
+    max_zenith_distance,
+    reachable,
+)
 
 
 class TestGeometry(unittest.TestCase):
@@ -288,6 +295,54 @@ class TestThreeAxis(unittest.TestCase):
         lim = JointLimits(az=(350.0, 360.0))
         self.assertTrue(within_limits((355.0, 45.0, 0.0), lim))
         self.assertFalse(within_limits((5.0, 45.0, 0.0), lim))
+
+
+class TestActuatorTripod(unittest.TestCase):
+    """3本リニアアクチュエータ(パラレル機構)の運動学。"""
+
+    def test_home_is_symmetric(self):
+        """home(天頂指向)では3脚が同長。"""
+        L = leg_lengths(0.0, 90.0)
+        self.assertAlmostEqual(L[0], L[1], places=9)
+        self.assertAlmostEqual(L[1], L[2], places=9)
+        self.assertAlmostEqual(L[0], home_length(), places=12)
+
+    def test_leg_lengths_golden(self):
+        """既知寸法での脚長(Python実装の回帰固定・JSシムとの突き合わせ元)。"""
+        golden = {
+            (0.0, 90.0): (1.030776, 1.030776, 1.030776),
+            (0.0, 70.0): (1.030776, 1.135269, 0.934964),
+            (90.0, 75.0): (0.946381, 1.075483, 1.075483),
+            (180.0, 60.0): (1.030776, 0.895317, 1.186512),
+            (270.0, 80.0): (1.091070, 1.001658, 1.001658),
+        }
+        for (a, h), g in golden.items():
+            L = leg_lengths(a, h)
+            for got, exp in zip(L, g):
+                self.assertAlmostEqual(got, exp, places=5, msg=f"({a},{h})")
+
+    def test_tilt_azimuth_symmetry(self):
+        """方位を変えても傾き量が同じなら脚長は巡回(全方位対称)。"""
+        # a=0 と a=120 は取付方位(120°間隔)ぶん巡回した脚長になる
+        l0 = leg_lengths(90.0, 70.0)  # φ=90 の脚へ向けて傾ける
+        l1 = leg_lengths(210.0, 70.0)  # φ=210 の脚へ
+        self.assertAlmostEqual(sorted(l0)[0], sorted(l1)[0], places=6)
+        self.assertAlmostEqual(sorted(l0)[2], sorted(l1)[2], places=6)
+
+    def test_workspace_is_zenith_cap(self):
+        """到達範囲は天頂まわりの円錐。天頂は可、低仰角は不可。"""
+        self.assertTrue(reachable(0.0, 90.0))  # 天頂
+        self.assertTrue(reachable(123.0, 80.0))  # 高仰角・全方位可
+        self.assertFalse(reachable(0.0, 20.0))  # 低仰角はストローク外
+        beta = max_zenith_distance()
+        self.assertGreaterEqual(beta, 40.0)  # 代表寸法で ~45°(仰角45°以上)
+        self.assertLessEqual(beta, 60.0)
+
+    def test_custom_geometry(self):
+        """寸法を変えると到達円錐が変わる(スライダー化の妥当性)。"""
+        wide = TripodGeometry(stroke=(0.5, 1.6))
+        narrow = TripodGeometry(stroke=(1.0, 1.1))
+        self.assertGreater(max_zenith_distance(wide), max_zenith_distance(narrow))
 
 
 if __name__ == "__main__":

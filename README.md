@@ -15,14 +15,16 @@ parabolic-antenna/
 │   ├── __init__.py
 │   ├── geometry.py                 # 順問題・像ずれ・補正(numpy 不要)
 │   ├── solver.py                   # 最小二乗で (θ_t, φ_t) 推定
-│   └── three_axis.py               # 3軸(Az–El–XEl)運動学・キーホール除去・関節可動域
+│   ├── three_axis.py               # 3軸(Az–El–XEl)運動学・キーホール除去・関節可動域
+│   └── actuator_tripod.py          # 実機の3本リニアアクチュエータ(パラレル機構)運動学
 ├── examples/
 │   ├── demo.py                     # 本問題のサンプル実行
 │   └── demo_3axis.py               # 天頂キーホール除去・第3軸の中立位置デモ
 ├── tests/
 │   └── test_pedestal_tilt.py       # 単体テスト(stdlib unittest)
 ├── sim/
-│   ├── antenna3d.html              # 3軸マウントのインタラクティブ3Dシミュレーション
+│   ├── antenna3d.html              # 3軸(Az–El–XEl)マウントのインタラクティブ3Dシミュレーション
+│   ├── tripod3d.html               # 実機準拠:3本アクチュエータ機構の3Dシミュレーション
 │   └── gen_golden.py               # シムの自己テスト golden 値を再生成
 └── slides/
     ├── slides.html                 # 解説スライド(HTML)
@@ -156,6 +158,25 @@ commands = plan_pass(sky_samples, theta_t_deg=0.0, phi_t_deg=0.0,
 
 運動学 JS は `pedestal_tilt/three_axis.py` の厳密移植。数式を変えたら
 `python3 sim/gen_golden.py` で自己テストの golden 値(`GOLD_FWD`/`GOLD_HOLD`/`GOLD_ORBIT`)を再生成して貼り替える。
+
+## 実機の機構 — 3本リニアアクチュエータ(パラレル機構)
+
+写真の実機は Az–El–XEl の回転ジンバルではなく、**中央支点まわりに張った3本の可変長
+アクチュエータ(蛇腹シリンダ)の伸縮**で皿を指向する**パラレル機構**。
+皿の向き (a, h) から各脚長 Lᵢ を求める逆運動学を `pedestal_tilt/actuator_tripod.py` で提供する。
+
+```python
+from pedestal_tilt import leg_lengths, reachable, max_zenith_distance, TripodGeometry
+
+L1, L2, L3 = leg_lengths(a_deg=0.0, h_deg=70.0)     # 指向 → 3脚長(逆運動学)
+ok = reachable(0.0, 30.0)                            # ストローク内で実現可能か
+beta = max_zenith_distance()                         # 到達円錐の半角(全方位で届く天頂距離)
+```
+
+- **回転ジンバルの「天頂キーホール」は持たない**。代わりに到達範囲が**天頂まわりの円錐(cap)**に限られる(各脚のストロークで決まる)。全方位 360° は脚長配分で届くが、低仰角はストロークで頭打ち。代表寸法では**仰角 45° 以上・全方位**が到達範囲。
+- 3D シミュレーション `sim/tripod3d.html` で、皿の指向に合わせて**3本のアクチュエータが実際に伸び縮みする**様子、**脚長 L1/L2/L3 vs 時間グラフ**(ストローク帯・超過フラグ)、**到達円錐**を確認できる(寸法はスライダーで調整可)。
+
+![実機準拠:3本アクチュエータ機構](./sim/preview-tripod.png)
 
 ## ライセンス
 

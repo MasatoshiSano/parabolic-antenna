@@ -21,7 +21,7 @@
 | `pedestal_tilt/` | コアパッケージ。順問題・逆問題・補正計算、3軸(Az–El–XEl)運動学・天頂キーホール除去(see `pedestal_tilt/AGENTS.md`) |
 | `examples/` | デモ実行スクリプト(see `examples/AGENTS.md`) |
 | `tests/` | stdlib unittest による単体テスト(see `tests/AGENTS.md`) |
-| `sim/` | 3軸マウントのインタラクティブ 3D シミュレーション(Three.js, 単一 HTML)(see `sim/AGENTS.md`) |
+| `sim/` | 3D シミュレーション群(Three.js, 単一 HTML)。`antenna3d.html`=3軸回転ジンバル＋キーホール、`tripod3d.html`=実機の3本アクチュエータ機構(see `sim/AGENTS.md`) |
 
 ## For AI Agents
 

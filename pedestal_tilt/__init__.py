@@ -18,6 +18,17 @@ from .three_axis import (
     plan_pass,
     within_limits,
 )
+from .actuator_tripod import (
+    DEFAULT as TRIPOD_DEFAULT,
+    TripodGeometry,
+    base_point,
+    home_length,
+    leg_lengths,
+    legs_within_stroke,
+    max_zenith_distance,
+    platform_point,
+    reachable,
+)
 
 __all__ = [
     "Observation",
@@ -37,4 +48,14 @@ __all__ = [
     "within_limits",
     "pass_fits_limits",
     "peak_abs_xel",
+    # 3本アクチュエータ(パラレル機構)
+    "TripodGeometry",
+    "TRIPOD_DEFAULT",
+    "leg_lengths",
+    "base_point",
+    "platform_point",
+    "legs_within_stroke",
+    "reachable",
+    "home_length",
+    "max_zenith_distance",
 ]
