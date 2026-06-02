@@ -15,15 +15,18 @@ parabolic-antenna/
 │   ├── __init__.py
 │   ├── geometry.py                 # 順問題・像ずれ・補正(numpy 不要)
 │   ├── solver.py                   # 最小二乗で (θ_t, φ_t) 推定
-│   └── three_axis.py               # 3軸(Az–El–XEl)運動学・天頂キーホール除去
+│   └── three_axis.py               # 3軸(Az–El–XEl)運動学・キーホール除去・関節可動域
 ├── examples/
 │   ├── demo.py                     # 本問題のサンプル実行
-│   └── demo_3axis.py               # 天頂キーホール除去のデモ
+│   └── demo_3axis.py               # 天頂キーホール除去・第3軸の中立位置デモ
 ├── tests/
 │   └── test_pedestal_tilt.py       # 単体テスト(stdlib unittest)
-└── sim/
-    ├── antenna3d.html              # 3軸マウントのインタラクティブ3Dシミュレーション
-    └── gen_golden.py               # シムの自己テスト golden 値を再生成
+├── sim/
+│   ├── antenna3d.html              # 3軸マウントのインタラクティブ3Dシミュレーション
+│   └── gen_golden.py               # シムの自己テスト golden 値を再生成
+└── slides/
+    ├── slides.html                 # 解説スライド(HTML)
+    └── pedestal-tilt-explained.pptx # 解説スライド(PowerPoint)
 ```
 
 ## 動作環境
