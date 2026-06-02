@@ -14,11 +14,16 @@ parabolic-antenna/
 ├── pedestal_tilt/
 │   ├── __init__.py
 │   ├── geometry.py                 # 順問題・像ずれ・補正(numpy 不要)
-│   └── solver.py                   # 最小二乗で (θ_t, φ_t) 推定
+│   ├── solver.py                   # 最小二乗で (θ_t, φ_t) 推定
+│   └── three_axis.py               # 3軸(Az–El–XEl)運動学・天頂キーホール除去
 ├── examples/
-│   └── demo.py                     # 本問題のサンプル実行
-└── tests/
-    └── test_pedestal_tilt.py       # 単体テスト(stdlib unittest)
+│   ├── demo.py                     # 本問題のサンプル実行
+│   └── demo_3axis.py               # 天頂キーホール除去のデモ
+├── tests/
+│   └── test_pedestal_tilt.py       # 単体テスト(stdlib unittest)
+└── sim/
+    ├── antenna3d.html              # 3軸マウントのインタラクティブ3Dシミュレーション
+    └── gen_golden.py               # シムの自己テスト golden 値を再生成
 ```
 
 ## 動作環境
@@ -96,6 +101,58 @@ a_cmd = a_calc + θ_t · sin(a_calc − φ_t) · tan(h_calc)
 ```
 
 導出と検証は [REPORT.md](./REPORT.md) を参照。
+
+## 3軸(Az–El–XEl)マウント — 天頂キーホール除去
+
+2軸(高度 0–90°)では天頂近傍を追尾する際に方位をほぼ 180° 振る必要があり(キーホール)、
+補正式の `tan(h)` も天頂で発散する。最上部にクロスエレベーション軸 ξ を1つ足すと、
+方位を凍結したまま視軸を横へ倒して天頂を「またいで」追尾できる。
+
+```bash
+python3 examples/demo_3axis.py
+```
+
+```python
+from pedestal_tilt import forward_3axis, ik_3axis_hold, plan_pass
+
+# 順問題:ξ=0 なら従来の 2軸 forward_pointing と厳密一致(上位互換)
+a_act, h_act = forward_3axis(a_cmd=90.0, h_cmd=89.0, xel_cmd=1.0,
+                             theta_t_deg=0.0, phi_t_deg=0.0)
+
+# 逆問題:方位を a_hold に凍結したまま目標を狙う(キーホール除去の中核)
+a, h, xel = ik_3axis_hold(a_tgt=120.0, h_tgt=89.5, a_hold=90.0,
+                          theta_t_deg=0.0, phi_t_deg=0.0)
+
+# パス全体の関節指令列を生成(キーホール内は方位保持戦略)
+commands = plan_pass(sky_samples, theta_t_deg=0.0, phi_t_deg=0.0,
+                     keyhole_deg=20.0, strategy="3axis")
+```
+
+最接近 1° の天頂通過パスでの実測:**キーホール内の方位総移動量は 2軸 174° → 3軸 0.00°**
+(XEl 最大 19.5°、指向誤差 < 1e-12°)。詳細は [REPORT.md](./REPORT.md) §8。
+
+### 3D シミュレーション
+
+`sim/antenna3d.html` をブラウザで開くと、3軸マウントをインタラクティブに操作できる
+(Three.js, 外部サーバ不要・ファイルを直接開いて可)。
+
+![3軸アンテナ 3Dシミュレーション](./sim/preview.png)
+
+- **手動モード**: Az / El / XEl と台座傾き θ_t/φ_t をスライダー操作。実指向 (a′,h′) は `forward_3axis` と一致(起動時に自己テストで検証)。
+- **衛星パス追尾モード**: あらゆる軌道パターンをプリセット＋スライダーで指定 ——
+  直上通過(天頂)/準天頂/高・中・低仰角/極軌道 N→S/赤道 E→W/静止衛星 GEO、
+  および山頂仰角・山頂方位の自由調整。2軸(キーホール)と 3軸(方位凍結+XEl)を切替比較。
+- **3軸の角度 vs 時間グラフ**: 横軸=時間で **Az(黄)/El(橙)/XEl(水)を同時表示**。
+  3軸では Az が山頂で平坦凍結・XEl が天頂越えを肩代わり、破線(2軸 Az)が急上昇する対比を可視化。
+- **回転軸の3D表示**: 各関節の回転軸(Az=鉛直・El=トラニオン水平・XEl=傾斜)を皿の手前に色分け描画。
+- **関節可動域 / 第3軸の中立位置**: XEl の中立を「端 [0–90°]」か「中央 [−45–+45°]」で切替。同じ 90° 幅でも、**中立を中央に置けば天頂越えの ±ξ が収まりキーホール除去が成立**(端では負側がはみ出し ⚠超過)。グラフに可動域バンド、読み出しに範囲内✓/超過⚠ を表示。
+
+![各軸の角度 vs 時間](./sim/preview-chart.png)
+
+![第3軸の中立中央(±45°)で天頂越えξが可動域に収まる](./sim/preview-limits.png)
+
+運動学 JS は `pedestal_tilt/three_axis.py` の厳密移植。数式を変えたら
+`python3 sim/gen_golden.py` で自己テストの golden 値(`GOLD_FWD`/`GOLD_HOLD`/`GOLD_ORBIT`)を再生成して貼り替える。
 
 ## ライセンス
 

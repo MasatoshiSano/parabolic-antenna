@@ -10,7 +10,7 @@
 ## Key Files
 | File | Description |
 |------|-------------|
-| `test_pedestal_tilt.py` | 3 つの TestCase: `TestGeometry`(回転行列・順問題・補正の往復)、`TestSolver`(既知解復元・本問題データ・優決定系)、`TestPhysicalIntuition`(北傾き南中で alt が下にずれる等) |
+| `test_pedestal_tilt.py` | 4 つの TestCase: `TestGeometry`(回転行列・順問題・補正の往復)、`TestSolver`(既知解復元・本問題データ・優決定系)、`TestPhysicalIntuition`(北傾き南中で alt が下にずれる等)、`TestThreeAxis`(3軸: 2軸への帰着・方位保持 IK 往復・天頂有限・パスで方位凍結) |
 
 ## For AI Agents
 

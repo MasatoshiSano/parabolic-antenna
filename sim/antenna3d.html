@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3軸(Az–El–XEl)パラボラアンテナ 3Dシミュレーション</title>
+<style>
+  :root { --bg:#0e1116; --panel:#171c24cc; --line:#2a323d; --txt:#dfe6ee; --dim:#9aa7b4;
+          --accent:#4fd1ff; --warn:#ffcf5c; --bad:#ff6b6b; --good:#5cff9d;
+          --cAz:#ffd34d; --cEl:#ff8a5c; --cXel:#4fd1ff; }
+  * { box-sizing: border-box; }
+  html,body { margin:0; height:100%; overflow:hidden; background:var(--bg);
+              color:var(--txt); font-family: ui-sans-serif, system-ui, "Segoe UI", sans-serif; }
+  canvas { display:block; }
+  #ui { position:fixed; top:12px; left:12px; width:308px; max-height:calc(100vh - 24px);
+        overflow-y:auto; background:var(--panel); backdrop-filter:blur(8px);
+        border:1px solid var(--line); border-radius:12px; padding:14px 16px; font-size:13px; }
+  #ui h1 { font-size:15px; margin:0 0 2px; letter-spacing:.02em; }
+  #ui .sub { color:var(--dim); font-size:11px; margin-bottom:10px; line-height:1.4; }
+  .seg { display:flex; gap:6px; margin:8px 0; }
+  .seg button { flex:1; padding:6px 4px; background:#222c38; color:var(--txt);
+                border:1px solid var(--line); border-radius:8px; cursor:pointer; font-size:12px; }
+  .seg button.on { background:var(--accent); color:#04222e; font-weight:600; border-color:var(--accent); }
+  select { width:100%; padding:6px 8px; background:#222c38; color:var(--txt);
+           border:1px solid var(--line); border-radius:8px; font-size:12px; }
+  .row { display:flex; align-items:center; justify-content:space-between; margin:7px 0 2px; }
+  .row label { color:var(--dim); font-size:12px; }
+  .row .val { font-variant-numeric:tabular-nums; color:var(--txt); font-size:12px; }
+  input[type=range] { width:100%; accent-color:var(--accent); margin:0; }
+  .group { border-top:1px solid var(--line); margin-top:10px; padding-top:8px; }
+  .group.dim { opacity:.45; pointer-events:none; }
+  .gtitle { font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--dim); margin-bottom:4px; }
+  #readout { position:fixed; top:12px; right:12px; width:268px; background:var(--panel);
+             backdrop-filter:blur(8px); border:1px solid var(--line); border-radius:12px;
+             padding:12px 14px; font-size:12px; }
+  #readout table { width:100%; border-collapse:collapse; font-variant-numeric:tabular-nums; }
+  #readout td { padding:2px 0; }
+  #readout td:last-child { text-align:right; color:var(--txt); }
+  #readout td:first-child { color:var(--dim); }
+  #chartPanel { position:fixed; bottom:10px; left:330px; right:300px; background:var(--panel);
+                backdrop-filter:blur(8px); border:1px solid var(--line); border-radius:12px;
+                padding:8px 12px 6px; display:none; }
+  #chartHead { font-size:12px; color:var(--dim); margin-bottom:5px; display:flex; gap:14px;
+               align-items:center; flex-wrap:wrap; }
+  #chartHead .lg { display:inline-flex; align-items:center; gap:5px; color:var(--txt); }
+  #chartHead .lg.ghost { color:var(--dim); }
+  #chartHead .d { width:11px; height:11px; border-radius:2px; display:inline-block; }
+  #chartHead .d.az { background:var(--cAz); } #chartHead .d.el { background:var(--cEl); }
+  #chartHead .d.xel { background:var(--cXel); }
+  #chartHead b { font-variant-numeric:tabular-nums; }
+  #chart { display:block; width:100%; height:128px; background:#0b0f14;
+           border:1px solid var(--line); border-radius:8px; }
+  #badge { position:fixed; bottom:12px; left:12px; background:var(--panel); border:1px solid var(--line);
+           border-radius:10px; padding:8px 12px; font-size:12px; font-variant-numeric:tabular-nums; z-index:5; }
+  #badge .k { color:var(--good); font-weight:600; }
+  #badge .x { color:var(--bad); font-weight:600; }
+  #hint { position:fixed; bottom:12px; right:12px; color:var(--dim); font-size:11px; text-align:right; line-height:1.5; }
+  .pill { display:inline-block; padding:1px 7px; border-radius:999px; font-size:11px; margin-left:6px; }
+  .pill.k2 { background:#3a2030; color:#ff9bb5; }
+  .pill.k3 { background:#10303a; color:var(--accent); }
+</style>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.184.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.184.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body>
+<div id="ui">
+  <h1>3軸パラボラアンテナ <span style="font-weight:400;color:var(--dim)">Az–El–XEl</span></h1>
+  <div class="sub">クロスエレベーション軸(第3軸)で天頂キーホールを除去。
+    運動学は <code>pedestal_tilt/three_axis.py</code> と一致。</div>
+
+  <div class="seg" id="modeSeg">
+    <button data-mode="manual" class="on">手動(関節操作)</button>
+    <button data-mode="pass">衛星パス追尾</button>
+  </div>
+
+  <div id="manualGroup" class="group">
+    <div class="gtitle">マウント関節</div>
+    <div class="row"><label>方位 Az (a)</label><span class="val" id="vAz">0°</span></div>
+    <input type="range" id="sAz" min="0" max="360" step="1" value="0">
+    <div class="row"><label>高度 El (h)</label><span class="val" id="vEl">35°</span></div>
+    <input type="range" id="sEl" min="0" max="90" step="0.5" value="35">
+    <div class="row"><label>クロスEl ξ (XEl)</label><span class="val" id="vXel">0°</span></div>
+    <input type="range" id="sXel" min="-60" max="60" step="0.5" value="0">
+  </div>
+
+  <div id="passGroup" class="group dim">
+    <div class="gtitle">衛星軌道</div>
+    <select id="orbitSel">
+      <option value="zenith">直上通過 (天頂 d=0°)</option>
+      <option value="nearzenith" selected>準天頂 (山頂 88.5°)</option>
+      <option value="high">高仰角パス (70°)</option>
+      <option value="mid">中仰角パス (45°)</option>
+      <option value="low">低仰角パス (15°)</option>
+      <option value="polar">極軌道 N→S (82°)</option>
+      <option value="equator">赤道 E→W (55°)</option>
+      <option value="geo">静止衛星 GEO (固定)</option>
+    </select>
+    <div class="row"><label>山頂仰角(最大高度)</label><span class="val" id="vCulmEl">88.5°</span></div>
+    <input type="range" id="sCulmEl" min="0" max="90" step="0.5" value="88.5">
+    <div class="row"><label>山頂方位</label><span class="val" id="vCulmAz">90°</span></div>
+    <input type="range" id="sCulmAz" min="0" max="360" step="1" value="90">
+
+    <div class="gtitle" style="margin-top:10px">追尾方式</div>
+    <div class="seg" id="stratSeg">
+      <button data-strat="2axis">2軸 <span class="pill k2">キーホール</span></button>
+      <button data-strat="3axis" class="on">3軸 <span class="pill k3">凍結</span></button>
+    </div>
+    <div class="row"><label>キーホール半径</label><span class="val" id="vKey">20°</span></div>
+    <input type="range" id="sKey" min="5" max="35" step="1" value="20">
+
+    <div class="gtitle" style="margin-top:10px">第3軸(XEl)可動域 — 中立位置(90°幅)</div>
+    <div class="seg" id="xnSeg">
+      <button data-xn="edge">端 [0–90°]</button>
+      <button data-xn="center" class="on">中央 [−45–+45°]</button>
+    </div>
+    <div class="row"><label>再生速度</label><span class="val" id="vSpeed">1.0×</span></div>
+    <input type="range" id="sSpeed" min="0.2" max="4" step="0.1" value="1">
+    <div class="seg"><button id="playBtn" class="on">▶ 再生</button><button id="resetBtn">⟲ 最初へ</button></div>
+  </div>
+
+  <div class="group">
+    <div class="gtitle">台座傾き(共通)</div>
+    <div class="row"><label>傾き θ_t</label><span class="val" id="vTh">0.0°</span></div>
+    <input type="range" id="sTh" min="0" max="6" step="0.1" value="0">
+    <div class="row"><label>傾き方位 φ_t</label><span class="val" id="vPh">315°</span></div>
+    <input type="range" id="sPh" min="0" max="360" step="1" value="315">
+    <div class="row"><label>傾き表示倍率</label><span class="val" id="vEx">8×</span></div>
+    <input type="range" id="sEx" min="1" max="20" step="1" value="8">
+  </div>
+
+  <div class="group">
+    <div class="gtitle">表示</div>
+    <div class="seg"><button id="axBtn" class="on">回転軸: 表示</button></div>
+  </div>
+</div>
+
+<div id="readout">
+  <table>
+    <tr><td>モード</td><td id="rMode">手動</td></tr>
+    <tr><td>目標 (a, h)</td><td id="rTgt">—</td></tr>
+    <tr><td>関節 (a, h, ξ)</td><td id="rJoint">0.0, 35.0, 0.0</td></tr>
+    <tr><td>実指向 (a′, h′)</td><td id="rBore">—</td></tr>
+    <tr><td>指向誤差</td><td id="rErr">—</td></tr>
+    <tr><td>方位 総移動量(錐内)</td><td id="rTravel">—</td></tr>
+    <tr><td>XEl 可動域 / 要求</td><td id="rXelFit">—</td></tr>
+  </table>
+</div>
+
+<div id="chartPanel">
+  <div id="chartHead">各軸の角度 vs 時間
+    <span class="lg"><i class="d az"></i>Az <b id="lgAz">—</b></span>
+    <span class="lg"><i class="d el"></i>El <b id="lgEl">—</b></span>
+    <span class="lg"><i class="d xel"></i>XEl <b id="lgXel">—</b></span>
+    <span class="lg ghost">┄ 破線 = 2軸の Az(対比)</span>
+  </div>
+  <canvas id="chart" width="640" height="128"></canvas>
+</div>
+
+<div id="badge">自己テスト: <span id="selftest">実行中…</span></div>
+<div id="hint">ドラッグ=回転 / ホイール=ズーム / 右ドラッグ=パン<br>
+  赤=視軸・黄=衛星・水色=天空パス / 回転軸: <b style="color:var(--cAz)">Az</b> <b style="color:var(--cEl)">El</b> <b style="color:var(--cXel)">XEl</b></div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+/* ======================================================================
+ *  1. 運動学(pedestal_tilt/three_axis.py の厳密移植) — すべて degrees
+ *  座標規約: 方位 a=北0°/東90°, 高度 h=地平0°/天頂90°
+ *  単位ベクトル u=(N,E,U), x̂=(1,0,0)=北・地平を視軸ゼロ基準とする
+ *  u_mount = Rz(a)·Ey(h)·Rz(ξ)·x̂ ,  u_true = R_tilt(θ,φ)·u_mount
+ * ==================================================================== */
+const D2R = Math.PI/180, R2D = 180/Math.PI;
+const cos = a=>Math.cos(a*D2R), sin = a=>Math.sin(a*D2R);
+
+function Rz(deg){ const c=cos(deg), s=sin(deg);
+  return [[c,-s,0],[s,c,0],[0,0,1]]; }            // 天頂(z)軸まわり
+function Ey(deg){ const c=cos(deg), s=sin(deg);
+  return [[c,0,-s],[0,1,0],[s,0,c]]; }            // 東(y)軸まわり: Ey(h)·x̂=(cos h,0,sin h)
+function matmul(A,B){ const M=[[0,0,0],[0,0,0],[0,0,0]];
+  for(let i=0;i<3;i++)for(let j=0;j<3;j++){let s=0;for(let k=0;k<3;k++)s+=A[i][k]*B[k][j];M[i][j]=s;}
+  return M; }
+function matvec(M,v){ return [0,1,2].map(i=>M[i][0]*v[0]+M[i][1]*v[1]+M[i][2]*v[2]); }
+function transpose(M){ return [[M[0][0],M[1][0],M[2][0]],[M[0][1],M[1][1],M[2][1]],[M[0][2],M[1][2],M[2][2]]]; }
+
+function tiltRotationMatrix(thetaDeg, phiDeg){    // Rodrigues, 軸 n=(-sinφ,cosφ,0)
+  const th=thetaDeg*D2R, ph=phiDeg*D2R;
+  const n=[-Math.sin(ph), Math.cos(ph), 0];
+  const K=[[0,-n[2],n[1]],[n[2],0,-n[0]],[-n[1],n[0],0]];
+  const KK=matmul(K,K), s=Math.sin(th), c=1-Math.cos(th);
+  const R=[[0,0,0],[0,0,0],[0,0,0]];
+  for(let i=0;i<3;i++)for(let j=0;j<3;j++)
+    R[i][j]=(i===j?1:0)+s*K[i][j]+c*KK[i][j];
+  return R;
+}
+function altazToUnit(a,h){ return [cos(h)*cos(a), cos(h)*sin(a), sin(h)]; }
+function unitToAltaz(u){
+  const a=((Math.atan2(u[1],u[0])*R2D)%360+360)%360;
+  const h=Math.asin(Math.max(-1,Math.min(1,u[2])))*R2D;
+  return [a,h];
+}
+function forward3axis(a,h,xel,th,ph){
+  let u=matvec(Rz(xel),[1,0,0]);
+  u=matvec(Ey(h),u); u=matvec(Rz(a),u);
+  u=matvec(tiltRotationMatrix(th,ph),u);
+  return unitToAltaz(u);
+}
+function forwardPointing(a,h,th,ph){   // 2軸(ξ=0 相当)— 検証用
+  return unitToAltaz(matvec(tiltRotationMatrix(th,ph), altazToUnit(a,h)));
+}
+function ik3axisHold(aTgt,hTgt,aHold,th,ph){
+  const R=tiltRotationMatrix(th,ph);
+  const uMount=matvec(transpose(R), altazToUnit(aTgt,hTgt));
+  const v=matvec(Rz(-aHold), uMount);
+  const [vx,vy,vz]=v;
+  const xel=Math.atan2(vy, Math.hypot(vx,vz))*R2D;
+  const h=Math.atan2(vz, vx)*R2D;
+  return [((aHold%360)+360)%360, h, xel];
+}
+function ik3axis(aTgt,hTgt,th,ph,holdAz,keyhole=10){
+  const R=tiltRotationMatrix(th,ph);
+  const uMount=matvec(transpose(R), altazToUnit(aTgt,hTgt));
+  const [am,hm]=unitToAltaz(uMount);
+  if(holdAz!=null) return ik3axisHold(aTgt,hTgt,holdAz,th,ph);
+  if((90-hm)>=keyhole) return [((am%360)+360)%360, hm, 0];
+  return ik3axisHold(aTgt,hTgt,am,th,ph);
+}
+// 天空パス: 山頂(culmEl, culmAz)を最高点とする大円を地平→地平(s=-88..88)で生成。
+// geo=true なら静止衛星(全サンプル同一)。
+function makeOrbit(culmEl, culmAz, geo, n){
+  if(geo){ const o=[]; for(let i=0;i<n;i++) o.push([((culmAz%360)+360)%360, culmEl]); return o; }
+  const u0=altazToUnit(culmAz, culmEl), q=altazToUnit((culmAz+90)%360, 0);
+  const o=[];
+  for(let i=0;i<n;i++){ const s=(-88 + 176*i/(n-1))*D2R;
+    o.push(unitToAltaz([0,1,2].map(k=>Math.cos(s)*u0[k]+Math.sin(s)*q[k]))); }
+  return o;
+}
+function makeZenithPass(dMin,aCulm,sList){   // 自己テスト用(0.5°刻み)
+  const u0=altazToUnit(aCulm,90-dMin), q=altazToUnit((aCulm+90)%360,0);
+  return sList.map(s=>{ const r=s*D2R;
+    return unitToAltaz([0,1,2].map(i=>Math.cos(r)*u0[i]+Math.sin(r)*q[i])); });
+}
+function planPass(samples,th,ph,keyhole,strategy){
+  const R=tiltRotationMatrix(th,ph), Rt=transpose(R);
+  const mount=samples.map(([a,h])=>unitToAltaz(matvec(Rt,altazToUnit(a,h))));
+  if(strategy==="2axis") return mount.map(([am,hm])=>[((am%360)+360)%360,hm,0]);
+  const inCone=mount.map(([,hm])=>(90-hm)<keyhole);
+  let holdAz=null,bestH=-1e9;
+  mount.forEach(([am,hm],i)=>{ if(inCone[i]&&hm>bestH){bestH=hm;holdAz=am;} });
+  return samples.map(([aT,hT],i)=>{
+    const [am,hm]=mount[i];
+    if(!inCone[i]||holdAz==null) return [((am%360)+360)%360,hm,0];
+    const [a,h,x]=ik3axisHold(aT,hT,holdAz,th,ph);
+    if(h<0||h>90) return [((am%360)+360)%360,hm,0];
+    return [a,h,x];
+  });
+}
+const angdiff=(a,b)=>(((a-b+540)%360)-180);
+function unwrap(arr){ const o=[arr[0]]; for(let i=1;i<arr.length;i++){ let v=arr[i],p=o[i-1];
+  while(v-p>180)v-=360; while(v-p<-180)v+=360; o.push(v);} return o; }
+
+/* ======================================================================
+ *  2. 自己テスト(Python 由来 golden 値・不変条件・パス総移動量・軌道parity)
+ * ==================================================================== */
+const GOLD_FWD = [
+  [0,0,0,0,0, 0.000000000,0.000000000],
+  [90,30,0,0,0, 90.000000000,30.000000000],
+  [180,70,0,0,0, 180.000000000,70.000000000],
+  [0,90,10,0,0, 90.000000000,80.000000000],
+  [0,90,-25,0,0, 270.000000000,65.000000000],
+  [123,90,0,0,0, 123.000000000,90.000000000],
+  [90,30,0,0.7,315, 89.710643770,30.493727965],
+  [180,70,5,0.7,315, 195.979965016,69.757627425],
+  [270,30,-3,1.2,200, 265.910227951,29.470851415],
+  [45,89,15,0.5,80, 129.851211755,74.649821977],
+  [300,80,20,0,0, 4.494449739,67.731255505],
+  [60,45,-30,1.0,150, 21.377949357,38.389589262],
+];
+const GOLD_HOLD = [
+  [120,89.5,90,0,0, 90.000000000,89.566984550,0.249997620],
+  [200,88,170,0.7,315, 170.000000000,87.694561865,0.598595059],
+  [10,85,300,0,0, 300.000000000,88.286056386,4.697763660],
+];
+// 軌道生成+3軸プラン parity(culmEl=88.5, culmAz=120, n=177; 錐内 idx)
+const GOLD_ORBIT = {culmEl:88.5,culmAz:120,n:177,idx:[72,80,88,96,104],joints:[
+  [120.000000,88.500000,-16.000000],
+  [120.000000,88.500000,-8.000000],
+  [120.000000,88.500000,0.000000],
+  [120.000000,88.500000,8.000000],
+  [120.000000,88.500000,16.000000],
+]};
+function runSelfTest(){
+  const fails=[]; const near=(x,y,t=1e-5)=>Math.abs(x-y)<t;
+  GOLD_FWD.forEach(g=>{ const[a,h,x,th,ph,ap,hp]=g; const[gA,gH]=forward3axis(a,h,x,th,ph);
+    if(Math.abs(angdiff(gA,ap))>1e-5||!near(gH,hp)) fails.push(`fwd(${a},${h},${x})`); });
+  GOLD_HOLD.forEach(g=>{ const[a,h,ah,th,ph,ja,jh,jx]=g; const[A,H,X]=ik3axisHold(a,h,ah,th,ph);
+    if(Math.abs(angdiff(A,ja))>1e-5||!near(H,jh)||!near(X,jx)) fails.push(`hold(${a},${h},${ah})`); });
+  // 不変条件: ξ=0 で 2軸に一致
+  [[90,30,0.7,315],[180,70,1.2,200],[33,12,0,0]].forEach(([a,h,th,ph])=>{
+    const f3=forward3axis(a,h,0,th,ph), f2=forwardPointing(a,h,th,ph);
+    if(Math.abs(angdiff(f3[0],f2[0]))>1e-9||!near(f3[1],f2[1],1e-9)) fails.push(`reduce(${a},${h})`); });
+  // パス総移動量: 2軸≈174.36, 3軸≈0
+  const sl=[]; for(let i=-160;i<=160;i++) sl.push(i*0.5);
+  const sm=makeZenithPass(1.0,90.0,sl), inc=sm.map(([,h])=>(90-h)<20);
+  const tv=cmd=>{let t=0,prev=null; cmd.forEach((c,i)=>{ if(!inc[i]){prev=null;return;}
+    if(prev!=null)t+=Math.abs(angdiff(c[0],prev)); prev=c[0]; }); return t; };
+  const t2=tv(planPass(sm,0,0,20,"2axis")), t3=tv(planPass(sm,0,0,20,"3axis"));
+  if(Math.abs(t2-174.357)>0.5) fails.push(`travel2=${t2.toFixed(2)}`);
+  if(t3>0.5) fails.push(`travel3=${t3.toFixed(2)}`);
+  // 軌道 parity(JS makeOrbit+planPass == Python)
+  const orb=makeOrbit(GOLD_ORBIT.culmEl,GOLD_ORBIT.culmAz,false,GOLD_ORBIT.n);
+  const op=planPass(orb,0,0,20,'3axis');
+  GOLD_ORBIT.idx.forEach((ix,k)=>{ const g=GOLD_ORBIT.joints[k], c=op[ix];
+    if(Math.abs(angdiff(c[0],g[0]))>1e-4||!near(c[1],g[1],1e-4)||!near(c[2],g[2],1e-4)) fails.push(`orbit@${ix}`); });
+  // 不変: 錐外(山頂45°)では 3軸==2軸
+  const o45=makeOrbit(45,180,false,177);
+  const a2=planPass(o45,0,0,20,'2axis'), a3=planPass(o45,0,0,20,'3axis');
+  if(!a2.every((c,i)=>near(c[0],a3[i][0],1e-9)&&near(c[1],a3[i][1],1e-9)&&near(c[2],a3[i][2],1e-9)))
+    fails.push('outside-cone-eq');
+  // 不変: GEO は関節一定
+  const gp=planPass(makeOrbit(40,160,true,60),0,0,20,'3axis');
+  if(!gp.every(c=>near(c[0],gp[0][0],1e-9)&&near(c[1],gp[0][1],1e-9)&&near(c[2],gp[0][2],1e-9)))
+    fails.push('geo-const');
+  // 第3軸の中立中央で実現: 既定パスの ξ は両振り・peak≈19°、中央[-45,45]に収まり端[0,90]では不可
+  const pc=planPass(makeOrbit(88.5,90,false,177),0,0,20,'3axis').map(c=>c[2]);
+  const peakX=Math.max(...pc.map(Math.abs)), minX=Math.min(...pc);
+  if(Math.abs(peakX-19.0)>0.3) fails.push(`xelPeak=${peakX.toFixed(2)}`);
+  if(!(minX<-1e-6)) fails.push('xel-not-two-sided');
+  if(!pc.every(v=>v>=-45&&v<=45)) fails.push('center-range-fail');
+  if(pc.every(v=>v>=0&&v<=90)) fails.push('edge-range-should-fail');
+  return {fails, t2, t3, peakX};
+}
+
+/* ======================================================================
+ *  3. Three.js シーン
+ *  座標アダプタ ourWorld: 子は (N,E,U) 座標で記述 → three(X,Y,Z)=(E,U,N)
+ * ==================================================================== */
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(devicePixelRatio); renderer.setSize(innerWidth,innerHeight);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0e1116);
+scene.fog = new THREE.Fog(0x0e1116, 40, 120);
+
+const camera = new THREE.PerspectiveCamera(55, innerWidth/innerHeight, 0.1, 500);
+camera.position.set(9, 7, 11);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.target.set(0, 3.2, 0);
+
+scene.add(new THREE.AmbientLight(0xffffff, 0.85));
+const keyL = new THREE.DirectionalLight(0xffffff, 2.2); keyL.position.set(8,16,10); scene.add(keyL);
+const fill = new THREE.DirectionalLight(0x88aaff, 0.5); fill.position.set(-10,6,-8); scene.add(fill);
+
+const grid = new THREE.GridHelper(40, 40, 0x33404d, 0x222a33); scene.add(grid);
+
+// 方位ラベル軸: N=+Z, E=+X, Up=+Y (three座標)
+function axisArrow(dir,color){ return new THREE.ArrowHelper(dir,new THREE.Vector3(0,0.02,0),5,color,0.6,0.35); }
+scene.add(axisArrow(new THREE.Vector3(0,0,1),0x6fcf97));  // N
+scene.add(axisArrow(new THREE.Vector3(1,0,0),0xff9bb5));  // E
+function label(text,pos,color,scale){
+  const c=document.createElement('canvas'); c.width=128;c.height=64;
+  const x=c.getContext('2d'); x.fillStyle=color; x.font='bold 40px sans-serif';
+  x.textAlign='center'; x.fillText(text,64,46);
+  const s=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),transparent:true,depthTest:false}));
+  s.position.copy(pos); s.scale.set(scale||1.6,(scale||1.6)*0.5,1); return s;
+}
+scene.add(label('N',new THREE.Vector3(0,0.4,5.4),'#6fcf97'));
+scene.add(label('E',new THREE.Vector3(5.4,0.4,0),'#ff9bb5'));
+scene.add(label('天頂',new THREE.Vector3(0,5.6,0),'#9aa7b4'));
+
+// ---- ourWorld: (N,E,U)→three(E,U,N) 置換(det=+1 の固定回転) ----
+const ourWorld = new THREE.Group();
+ourWorld.matrixAutoUpdate = false;
+ourWorld.matrix.set( 0,1,0,0,  0,0,1,0,  1,0,0,0,  0,0,0,1 );   // row-major
+scene.add(ourWorld);
+
+const MAT = {
+  steel:  new THREE.MeshStandardMaterial({color:0x9aa6b2, roughness:0.45, metalness:0.7}),
+  dark:   new THREE.MeshStandardMaterial({color:0x2a2f37, roughness:0.6, metalness:0.5}),
+  dish:   new THREE.MeshStandardMaterial({color:0xf2f4f7, roughness:0.35, metalness:0.05, side:THREE.DoubleSide}),
+  dishBack:new THREE.MeshStandardMaterial({color:0xc7ced6, roughness:0.6, metalness:0.1, side:THREE.DoubleSide}),
+  feed:   new THREE.MeshStandardMaterial({color:0x222831, roughness:0.5, metalness:0.4}),
+  accent: new THREE.MeshStandardMaterial({color:0x4fd1ff, roughness:0.3, metalness:0.2,
+                                          emissive:0x103040, emissiveIntensity:0.6}),
+};
+const cyl=(r1,r2,len,mat)=>new THREE.Mesh(new THREE.CylinderGeometry(r1,r2,len,20),mat);
+const Y=new THREE.Vector3(0,1,0);
+
+// 寸法 (our 座標, 単位は適当なメートル)
+const H0=1.4;     // 三脚ハブ高さ
+const HCOL=1.6;   // 台座コラム長
+const HELB=0.5;   // az筐体からエルボまで
+
+// 三脚(固定・ワールド) + 接地脚
+for(let k=0;k<3;k++){
+  const az=k*120; const foot=[2.4*cos(az),2.4*sin(az),0];   // (N,E,U)
+  const leg=cyl(0.05,0.07,Math.hypot(2.4,H0),MAT.steel);
+  const mid=[foot[0]/2,foot[1]/2,H0/2];
+  leg.position.set(mid[0],mid[1],mid[2]);
+  leg.quaternion.setFromUnitVectors(Y,new THREE.Vector3(-foot[0],-foot[1],H0).normalize());
+  ourWorld.add(leg);
+  const pad=cyl(0.18,0.18,0.06,MAT.dark); pad.position.set(foot[0],foot[1],0.03); ourWorld.add(pad);
+}
+const hub=cyl(0.34,0.34,0.3,MAT.dark); hub.position.set(0,0,H0); ourWorld.add(hub);
+
+// ---- 関節チェーン: mountRoot(tilt) → az → el → xel → dish ----
+const mountRoot = new THREE.Group(); mountRoot.position.set(0,0,H0); ourWorld.add(mountRoot);
+const column = cyl(0.16,0.2,HCOL,MAT.steel); column.position.set(0,0,HCOL/2);
+column.quaternion.setFromUnitVectors(Y,new THREE.Vector3(0,0,1));
+mountRoot.add(column);
+
+const azGroup = new THREE.Group(); azGroup.position.set(0,0,HCOL); mountRoot.add(azGroup);
+const azHousing = new THREE.Mesh(new THREE.BoxGeometry(0.7,0.7,0.5),MAT.dark);
+azHousing.position.set(0,0,0.15); azGroup.add(azHousing);
+
+const elGroup = new THREE.Group(); elGroup.position.set(0,0,HELB); azGroup.add(elGroup);
+const trunnion = cyl(0.1,0.1,1.0,MAT.steel); elGroup.add(trunnion);   // local y = El軸
+const yoke = cyl(0.08,0.08,0.7,MAT.dark); yoke.position.set(0.35,0,0);
+yoke.quaternion.setFromUnitVectors(Y,new THREE.Vector3(1,0,0)); elGroup.add(yoke);
+
+const xelGroup = new THREE.Group(); xelGroup.position.set(0.7,0,0); elGroup.add(xelGroup);
+
+// ---- 皿(放物面 LatheGeometry) — 対称軸を local +x(視軸)へ ----
+const dishR=2.0, focal=1.5;
+const prof=[]; for(let i=0;i<=16;i++){ const r=dishR*i/16; prof.push(new THREE.Vector2(r, (r*r)/(4*focal))); }
+const dishGeo=new THREE.LatheGeometry(prof,40);
+const dish=new THREE.Mesh(dishGeo,MAT.dish); dish.rotation.z=-Math.PI/2; xelGroup.add(dish);
+const back=new THREE.Mesh(dishGeo,MAT.dishBack); back.rotation.z=-Math.PI/2; back.scale.set(0.99,0.99,0.99); xelGroup.add(back);
+const feedArm=cyl(0.04,0.04,focal,MAT.feed); feedArm.position.set(focal/2,0,0);
+feedArm.quaternion.setFromUnitVectors(Y,new THREE.Vector3(1,0,0)); xelGroup.add(feedArm);
+const feed=new THREE.Mesh(new THREE.CylinderGeometry(0.12,0.18,0.34,16),MAT.feed);
+feed.position.set(focal,0,0); feed.quaternion.setFromUnitVectors(Y,new THREE.Vector3(1,0,0)); xelGroup.add(feed);
+const xelRing=new THREE.Mesh(new THREE.TorusGeometry(0.34,0.03,8,28),MAT.accent); xelGroup.add(xelRing);
+
+// ---- 視軸レイ(local +x) ----
+const boreLen=14;
+const bore=cyl(0.018,0.018,boreLen,new THREE.MeshBasicMaterial({color:0xff5b5b}));
+bore.position.set(boreLen/2,0,0); bore.quaternion.setFromUnitVectors(Y,new THREE.Vector3(1,0,0));
+xelGroup.add(bore);
+
+// ---- 回転軸ヘルパ(各関節の回転軸を可視化、グラフ線と同色) ----
+const AXC={ az:0xffd34d, el:0xff8a5c, xel:0x4fd1ff };
+function axisRod(dir,len,color){
+  const r=cyl(0.026,0.026,len,new THREE.MeshBasicMaterial({color,depthTest:false,transparent:true,opacity:0.92}));
+  r.renderOrder=10;   // 皿の手前に常時描画(三軸を隠さない)
+  r.quaternion.setFromUnitVectors(Y,dir.clone().normalize()); return r; }
+const axisHelpers=[];
+{ // Az軸 = mountRoot local z(傾いたマウントの鉛直)
+  const r=axisRod(new THREE.Vector3(0,0,1),HCOL+1.6,AXC.az); r.position.set(0,0,(HCOL+1.6)/2-0.3);
+  mountRoot.add(r); const l=label('Az軸','#ffd34d',new THREE.Vector3(0,0,HCOL+1.45),1.1);
+  mountRoot.add(l); axisHelpers.push(r,l); }
+{ // El軸 = elGroup local y(East)
+  const r=axisRod(new THREE.Vector3(0,1,0),2.8,AXC.el); elGroup.add(r);
+  const l=label('El軸','#ff8a5c',new THREE.Vector3(0,1.6,0),1.1); elGroup.add(l); axisHelpers.push(r,l); }
+{ // XEl軸 = xelGroup local z
+  const r=axisRod(new THREE.Vector3(0,0,1),2.4,AXC.xel); xelGroup.add(r);
+  const l=label('XEl軸','#4fd1ff',new THREE.Vector3(0,0,1.45),1.1); xelGroup.add(l); axisHelpers.push(r,l); }
+
+/* ---- 天空: 衛星マーカ・パス線(すべて ourWorld 直下=our座標) ---- */
+const SKY=9.0;
+const sun=new THREE.Mesh(new THREE.SphereGeometry(0.3,24,24),
+  new THREE.MeshStandardMaterial({color:0xffd34d, emissive:0xffb000, emissiveIntensity:0.9}));
+ourWorld.add(sun); sun.visible=false;
+const MAXP=400; const pathPos=new Float32Array(MAXP*3);
+const pathGeo=new THREE.BufferGeometry(); pathGeo.setAttribute('position',new THREE.BufferAttribute(pathPos,3));
+pathGeo.setDrawRange(0,0);
+const pathLine=new THREE.Line(pathGeo,new THREE.LineBasicMaterial({color:0x4fd1ff,transparent:true,opacity:0.7}));
+ourWorld.add(pathLine); pathLine.visible=false;
+const coneRing=new THREE.Mesh(new THREE.RingGeometry(0.01,0.01,48),
+  new THREE.MeshBasicMaterial({color:0xff6b6b,transparent:true,opacity:0.18,side:THREE.DoubleSide}));
+ourWorld.add(coneRing); coneRing.visible=false;
+
+/* ======================================================================
+ *  4. 状態・UI
+ * ==================================================================== */
+const S = { mode:'manual', a:0, h:35, xel:0, th:0, ph:315, exag:8,
+            strat:'3axis', culmEl:88.5, culmAz:90, geo:false, keyhole:20,
+            speed:1, playing:true, showAxes:true,
+            xelNeutral:'center', xelMin:-45, xelMax:45,   // 第3軸 中立=中央(90°幅)
+            t:0, pass:null, plan2:null, plan3:null, ser2:null, ser3:null, inConeMask:[] };
+window.__sim = S;   // QA/デバッグ用フック
+const NS = 177;     // パスのサンプル数
+
+const $=id=>document.getElementById(id);
+function bindSlider(id,key,fmt,after){ const el=$('s'+id), out=$('v'+id);
+  const upd=()=>{ S[key]=parseFloat(el.value); out.textContent=fmt(S[key]); if(after)after(); };
+  el.addEventListener('input',upd); upd(); }
+function setSlider(id,v){ const el=$('s'+id); el.value=v; el.dispatchEvent(new Event('input')); }
+bindSlider('Az','a',v=>v.toFixed(0)+'°');
+bindSlider('El','h',v=>v.toFixed(1)+'°');
+bindSlider('Xel','xel',v=>v.toFixed(1)+'°');
+bindSlider('CulmEl','culmEl',v=>v.toFixed(1)+'°',rebuildPass);
+bindSlider('CulmAz','culmAz',v=>v.toFixed(0)+'°',rebuildPass);
+bindSlider('Key','keyhole',v=>v.toFixed(0)+'°',rebuildPass);
+bindSlider('Speed','speed',v=>v.toFixed(1)+'×');
+bindSlider('Th','th',v=>v.toFixed(1)+'°',rebuildPass);
+bindSlider('Ph','ph',v=>v.toFixed(0)+'°',rebuildPass);
+bindSlider('Ex','exag',v=>v.toFixed(0)+'×');
+
+const ORBITS={
+  zenith:{el:90,az:90,geo:false},    nearzenith:{el:88.5,az:90,geo:false},
+  high:{el:70,az:135,geo:false},     mid:{el:45,az:180,geo:false},
+  low:{el:15,az:210,geo:false},      polar:{el:82,az:90,geo:false},
+  equator:{el:55,az:180,geo:false},  geo:{el:40,az:160,geo:true},
+};
+$('orbitSel').addEventListener('change',e=>{ const o=ORBITS[e.target.value]; if(!o)return;
+  S.geo=o.geo; S.t=0; setSlider('CulmAz',o.az); setSlider('CulmEl',o.el); /* CulmEl 最後→rebuild */ });
+
+document.querySelectorAll('#modeSeg button').forEach(b=>b.onclick=()=>{
+  S.mode=b.dataset.mode;
+  document.querySelectorAll('#modeSeg button').forEach(x=>x.classList.toggle('on',x===b));
+  const pass=S.mode==='pass';
+  $('manualGroup').classList.toggle('dim',pass);
+  $('passGroup').classList.toggle('dim',!pass);
+  $('rMode').textContent = pass?'衛星パス追尾':'手動';
+  $('chartPanel').style.display = pass?'block':'none';
+  if(pass){ S.t=0; rebuildPass(); fitChart(); }
+  else { sun.visible=false; pathLine.visible=false; coneRing.visible=false; }
+});
+document.querySelectorAll('#stratSeg button').forEach(b=>b.onclick=()=>{
+  S.strat=b.dataset.strat;
+  document.querySelectorAll('#stratSeg button').forEach(x=>x.classList.toggle('on',x===b));
+});
+$('playBtn').onclick=()=>{ S.playing=!S.playing; $('playBtn').textContent=S.playing?'▶ 再生':'⏸ 停止';
+  $('playBtn').classList.toggle('on',S.playing); };
+$('resetBtn').onclick=()=>{ S.t=0; };
+$('axBtn').onclick=()=>{ S.showAxes=!S.showAxes; axisHelpers.forEach(o=>o.visible=S.showAxes);
+  $('axBtn').textContent='回転軸: '+(S.showAxes?'表示':'非表示'); $('axBtn').classList.toggle('on',S.showAxes); };
+
+// 第3軸(XEl)の中立位置: 端[0,90] か 中央[-45,45](同じ90°幅)。
+// 中立を中央に置くと天頂越えに必要な ±ξ が収まり、キーホール除去が制約下でも成立する。
+function setXelRange(mode){
+  S.xelNeutral=mode;
+  if(mode==='edge'){ S.xelMin=0; S.xelMax=90; } else { S.xelMin=-45; S.xelMax=45; }
+  const el=$('sXel'); el.min=S.xelMin; el.max=S.xelMax;
+  el.value=Math.max(S.xelMin,Math.min(S.xelMax,parseFloat(el.value)||0));
+  el.dispatchEvent(new Event('input'));   // S.xel とラベル更新
+  document.querySelectorAll('#xnSeg button').forEach(x=>x.classList.toggle('on',x.dataset.xn===mode));
+}
+document.querySelectorAll('#xnSeg button').forEach(b=>b.onclick=()=>setXelRange(b.dataset.xn));
+setXelRange('center');   // 既定: 中立中央
+
+function rebuildPass(){
+  if(S.mode!=='pass') return;
+  S.pass=makeOrbit(S.culmEl,S.culmAz,S.geo,NS);
+  S.plan2=planPass(S.pass,S.th,S.ph,S.keyhole,'2axis');
+  S.plan3=planPass(S.pass,S.th,S.ph,S.keyhole,'3axis');
+  S.inConeMask=S.pass.map(([,h])=>(90-h)<S.keyhole);
+  const ser=plan=>({az:unwrap(plan.map(c=>c[0])), el:plan.map(c=>c[1]), xel:plan.map(c=>c[2])});
+  S.ser2=ser(S.plan2); S.ser3=ser(S.plan3);
+  // 天空パス線(our座標)
+  if(!S.geo){ let n=0; S.pass.forEach(([a,h])=>{ const u=altazToUnit(a,h);
+      pathPos[n++]=u[0]*SKY; pathPos[n++]=u[1]*SKY; pathPos[n++]=u[2]*SKY; });
+    pathGeo.setDrawRange(0,S.pass.length); pathGeo.attributes.position.needsUpdate=true;
+    pathGeo.computeBoundingSphere(); }
+  // キーホール錐リング
+  const zr=Math.sin(S.keyhole*D2R)*SKY, zz=Math.cos(S.keyhole*D2R)*SKY;
+  coneRing.geometry.dispose(); coneRing.geometry=new THREE.RingGeometry(zr*0.985,zr,64);
+  coneRing.position.set(0,0,zz);
+  // 表示制御
+  sun.visible=true; pathLine.visible=!S.geo; coneRing.visible=!S.geo;
+}
+
+/* ======================================================================
+ *  5. 毎フレーム更新
+ * ==================================================================== */
+function applyJoints(a,h,xel,th,ph){
+  azGroup.rotation.set(0,0,a*D2R);     // Rz(a) about our z(Up)
+  elGroup.rotation.set(0,-h*D2R,0);    // Ey(h) = three Ry(-h) about our y(East)
+  xelGroup.rotation.set(0,0,xel*D2R);  // Rz(ξ) about our z
+  mountRoot.setRotationFromAxisAngle(new THREE.Vector3(-sin(ph),cos(ph),0), (th*S.exag)*D2R);
+}
+
+const chart=$('chart'), cctx=chart.getContext('2d');
+function fitChart(){ if($('chartPanel').style.display!=='none'){ chart.width=chart.clientWidth; } }
+function drawChart(cur){
+  const W=chart.width,H=chart.height,pT=8,pB=16,pL=4,pR=4; cctx.clearRect(0,0,W,H);
+  if(!S.ser3) return;
+  const A=S.strat==='2axis'?S.ser2:S.ser3;
+  const ghost=S.strat==='2axis'?null:S.ser2.az;     // 3軸表示時に2軸Azを破線対比
+  const n=A.az.length;
+  const all=A.az.concat(A.el,A.xel,ghost||[]);
+  let mn=Math.min(...all),mx=Math.max(...all); if(mx-mn<2){mx+=1;mn-=1;}
+  const pad=(mx-mn)*0.08; mn-=pad; mx+=pad;
+  const X=k=>pL+(k/(n-1))*(W-pL-pR), Yv=v=>pT+(1-(v-mn)/(mx-mn))*(H-pT-pB);
+  // XEl 可動域バンド(第3軸のストローク範囲)
+  const yb1=Yv(Math.max(S.xelMin,mn)), yb2=Yv(Math.min(S.xelMax,mx));
+  cctx.fillStyle='rgba(79,209,255,0.10)';
+  cctx.fillRect(pL, Math.min(yb1,yb2), W-pL-pR, Math.abs(yb2-yb1));
+  cctx.strokeStyle='rgba(79,209,255,0.45)'; cctx.setLineDash([3,3]); cctx.lineWidth=1;
+  [S.xelMin,S.xelMax].forEach(b=>{ if(b>=mn&&b<=mx){ cctx.beginPath();
+    cctx.moveTo(pL,Yv(b)); cctx.lineTo(W-pR,Yv(b)); cctx.stroke(); }});
+  cctx.setLineDash([]);
+  cctx.strokeStyle='#1b2330'; cctx.lineWidth=1; cctx.fillStyle='#3a4654'; cctx.font='9px sans-serif';
+  [-90,0,90,180,270,360].forEach(g=>{ if(g>=mn&&g<=mx){ cctx.beginPath();
+    cctx.moveTo(X(0),Yv(g)); cctx.lineTo(X(n-1),Yv(g)); cctx.stroke(); cctx.fillText(g+'°',X(0)+2,Yv(g)-2); } });
+  const line=(arr,color,dash,w)=>{ cctx.strokeStyle=color; cctx.lineWidth=w||2; cctx.setLineDash(dash||[]);
+    cctx.beginPath(); arr.forEach((v,k)=>k?cctx.lineTo(X(k),Yv(v)):cctx.moveTo(X(k),Yv(v))); cctx.stroke(); cctx.setLineDash([]); };
+  if(ghost) line(ghost,'#ff6b6b',[4,4],1.3);
+  line(A.el,'#ff8a5c'); line(A.xel,'#4fd1ff'); line(A.az,'#ffd34d');
+  // XEl が可動域を超える点を赤で強調(端中立だと天頂越えでここが出る)
+  cctx.fillStyle='#ff6b6b';
+  A.xel.forEach((v,k)=>{ if(v<S.xelMin-1e-9||v>S.xelMax+1e-9){
+    cctx.beginPath(); cctx.arc(X(k),Yv(v),2.0,0,7); cctx.fill(); }});
+  // 再生ヘッド
+  cctx.strokeStyle='#dfe6ee'; cctx.lineWidth=1; cctx.beginPath();
+  cctx.moveTo(X(cur),pT); cctx.lineTo(X(cur),H-pB); cctx.stroke();
+  cctx.fillStyle='#6b7a89'; cctx.fillText('時間 →',W-44,H-4);
+}
+
+let last=performance.now();
+function tick(now){
+  const dt=(now-last)/1000; last=now;
+  let a,h,xel,tgt=null,bore3,errStr='—',travelStr='—';
+
+  if(S.mode==='manual'){
+    a=S.a; h=S.h; xel=S.xel;
+    bore3=forward3axis(a,h,xel,S.th,S.ph);
+    $('rTgt').textContent='—';
+  } else {
+    if(!S.pass) rebuildPass();
+    const N=S.pass.length;
+    if(S.playing){ S.t+=dt*S.speed*22; if(S.t>=N-1) S.t=0; }   // ループ再生
+    const i=Math.max(0,Math.min(N-1,Math.round(S.t)));
+    const plan = S.strat==='2axis'?S.plan2:S.plan3;
+    [a,h,xel]=plan[i]; tgt=S.pass[i];
+    bore3=forward3axis(a,h,xel,S.th,S.ph);
+    sun.position.set(...altazToUnit(tgt[0],tgt[1]).map(x=>x*SKY));
+    let tv=0,prev=null;
+    for(let k=0;k<=i;k++){ if(!S.inConeMask[k]){prev=null;continue;}
+      const av=plan[k][0]; if(prev!=null)tv+=Math.abs(angdiff(av,prev)); prev=av; }
+    travelStr=tv.toFixed(1)+'°'+(S.strat==='2axis'?'  ⚠':'  ✓');
+    errStr=Math.max(Math.abs(angdiff(bore3[0],tgt[0])),Math.abs(bore3[1]-tgt[1])).toFixed(3)+'°';
+    $('rTgt').textContent=`${tgt[0].toFixed(1)}, ${tgt[1].toFixed(1)}`;
+    $('lgAz').textContent=a.toFixed(1)+'°'; $('lgEl').textContent=h.toFixed(1)+'°'; $('lgXel').textContent=xel.toFixed(1)+'°';
+    // XEl 可動域に収まるか(必要半ストローク = パス全体の |ξ|max)
+    const xv=plan.map(c=>c[2]); const peak=Math.max(...xv.map(Math.abs));
+    const fit=xv.every(v=>v>=S.xelMin-1e-9&&v<=S.xelMax+1e-9);
+    $('rXelFit').textContent=`[${S.xelMin},${S.xelMax}]° / ±${peak.toFixed(1)}° ${fit?'✓範囲内':'⚠超過'}`;
+    drawChart(i);
+  }
+
+  applyJoints(a,h,xel,S.th,S.ph);
+  $('rJoint').textContent=`${a.toFixed(1)}, ${h.toFixed(1)}, ${xel.toFixed(1)}`;
+  $('rBore').textContent=`${bore3[0].toFixed(1)}, ${bore3[1].toFixed(1)}`;
+  $('rErr').textContent=errStr; $('rTravel').textContent=travelStr;
+
+  controls.update(); renderer.render(scene,camera);
+  requestAnimationFrame(tick);
+}
+
+addEventListener('resize',()=>{ camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight); fitChart(); });
+
+/* ---- 起動: 自己テスト → 視覚整合チェック → ループ ---- */
+scene.updateMatrixWorld(true);
+const st=runSelfTest();
+const savedEx=S.exag; S.exag=1; applyJoints(90,40,12,1.5,200); scene.updateMatrixWorld(true);
+const m=xelGroup.matrixWorld.elements;            // 列優先: local x = 列0
+const boreThree=[m[0],m[1],m[2]];
+const boreOur=[boreThree[2],boreThree[0],boreThree[1]];   // three(E,U,N)→our(N,E,U)
+const visAltaz=unitToAltaz(boreOur), expect=forward3axis(90,40,12,1.5,200);
+const visOK=Math.abs(angdiff(visAltaz[0],expect[0]))<1e-4 && Math.abs(visAltaz[1]-expect[1])<1e-4;
+S.exag=savedEx;
+if(!visOK) st.fails.push('visual-boresight');
+
+const badge=$('selftest');
+if(st.fails.length===0){
+  badge.innerHTML=`<span class="k">PASS</span> golden+軌道parity+パス(2軸 `+
+    `${st.t2.toFixed(1)}° vs 3軸 ${st.t3.toFixed(1)}°)+中立中央(±${st.peakX.toFixed(0)}°要求/±45可)+視覚整合`;
+} else {
+  badge.innerHTML=`<span class="x">FAIL</span> `+st.fails.join(', ');
+}
+console.log('[self-test]', st.fails.length?('FAIL: '+st.fails.join(', ')):'PASS',
+            {travel2:st.t2,travel3:st.t3,peakXel:st.peakX,visual:visOK});
+
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>
