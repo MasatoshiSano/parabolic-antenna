@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>パラボラアンテナ 3Dシミュレーション</title>
+<meta name="description" content="3軸(Az–El–XEl)マウントの天頂キーホール除去と、実機の3本リニアアクチュエータ機構を、ブラウザで操作できる3Dシミュレーション。">
+<style>
+  :root { --bg:#0e1116; --panel:#171c24; --line:#2a323d; --txt:#dfe6ee; --dim:#9aa7b4; --accent:#4fd1ff; }
+  * { box-sizing:border-box; }
+  body { margin:0; min-height:100vh; background:radial-gradient(1200px 600px at 50% -10%, #18222e 0%, var(--bg) 60%);
+         color:var(--txt); font-family: ui-sans-serif, system-ui, "Segoe UI", "Hiragino Sans", "Noto Sans JP", sans-serif;
+         line-height:1.6; -webkit-font-smoothing:antialiased; }
+  .wrap { max-width:980px; margin:0 auto; padding:48px 20px 64px; }
+  header h1 { font-size:clamp(22px,4vw,32px); margin:0 0 8px; letter-spacing:.01em; }
+  header p { color:var(--dim); margin:0 0 6px; font-size:15px; }
+  .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:20px; margin:36px 0 28px; }
+  .card { display:flex; flex-direction:column; background:var(--panel); border:1px solid var(--line);
+          border-radius:14px; overflow:hidden; text-decoration:none; color:inherit; transition:transform .12s, border-color .12s, box-shadow .12s; }
+  .card:hover { transform:translateY(-3px); border-color:var(--accent); box-shadow:0 12px 30px #0008; }
+  .card .thumb { aspect-ratio:16/10; background:#0b0f14 center/cover no-repeat; border-bottom:1px solid var(--line); }
+  .card .body { padding:16px 18px 18px; }
+  .card h2 { font-size:17px; margin:0 0 6px; }
+  .card p { color:var(--dim); font-size:13.5px; margin:0 0 12px; }
+  .card .go { color:var(--accent); font-size:13px; font-weight:600; }
+  .card .tag { display:inline-block; font-size:11px; color:var(--accent); background:#10303a;
+               border-radius:999px; padding:2px 9px; margin-bottom:8px; }
+  .note { color:var(--dim); font-size:13px; background:var(--panel); border:1px solid var(--line);
+          border-radius:12px; padding:14px 16px; }
+  footer { margin-top:30px; color:var(--dim); font-size:13px; display:flex; gap:18px; flex-wrap:wrap; }
+  footer a { color:var(--accent); text-decoration:none; }
+  footer a:hover { text-decoration:underline; }
+  code { background:#0b0f14; border:1px solid var(--line); border-radius:5px; padding:1px 5px; font-size:12px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>パラボラアンテナ 3Dシミュレーション</h1>
+    <p>アンテナの「向け方（指向機構）」をブラウザで動かして学べる3Dデモです。マウス操作で回転・ズームできます。</p>
+  </header>
+
+  <div class="cards">
+    <a class="card" href="sim/antenna3d.html">
+      <div class="thumb" style="background-image:url('sim/preview.png')"></div>
+      <div class="body">
+        <span class="tag">3軸ジンバル</span>
+        <h2>Az–El–XEl マウント／天頂キーホール除去</h2>
+        <p>2軸（経緯台）では天頂付近で方位を約180°振る「キーホール」が起きる。第3軸（クロスエレベーション）でそれを除去する様子を、各軸の角度グラフ付きで可視化。</p>
+        <span class="go">開く →</span>
+      </div>
+    </a>
+
+    <a class="card" href="sim/tripod3d.html">
+      <div class="thumb" style="background-image:url('sim/preview-tripod.png')"></div>
+      <div class="body">
+        <span class="tag">実機準拠</span>
+        <h2>3本リニアアクチュエータ（パラレル機構）</h2>
+        <p>実機どおり、中央支点まわりの3本のシリンダの伸び縮みで皿を指向。各アクチュエータの長さグラフと「到達できる範囲（円錐）」を表示。</p>
+        <span class="go">開く →</span>
+      </div>
+    </a>
+  </div>
+
+  <div class="note">
+    💡 動作には最近のブラウザとインターネット接続が必要です（3D描画ライブラリ Three.js をCDNから読み込みます）。スマホでも動きますが、PC・大きめの画面が見やすいです。
+  </div>
+
+  <footer>
+    <a href="https://github.com/MasatoshiSano/parabolic-antenna">GitHub リポジトリ</a>
+    <a href="https://github.com/MasatoshiSano/parabolic-antenna/blob/main/README.md">README</a>
+    <a href="https://github.com/MasatoshiSano/parabolic-antenna/blob/main/REPORT.md">数式・導出レポート</a>
+  </footer>
+</div>
+</body>
+</html>
