@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="パラボラアンテナ">
+  <rect width="64" height="64" rx="14" fill="#0e1116"/>
+  <!-- 皿(放物面を斜めから) -->
+  <g transform="rotate(-22 32 29)">
+    <ellipse cx="32" cy="28" rx="21" ry="9.5" fill="#eef2f6"/>
+    <ellipse cx="32" cy="28" rx="21" ry="9.5" fill="none" stroke="#c7ced6" stroke-width="1"/>
+  </g>
+  <!-- 給電アーム + フィード(焦点) -->
+  <line x1="32" y1="29" x2="46" y2="15" stroke="#9aa6b2" stroke-width="2.6" stroke-linecap="round"/>
+  <circle cx="47" cy="13.5" r="3.6" fill="#4fd1ff"/>
+  <!-- 中央ポスト -->
+  <rect x="30.2" y="31" width="3.6" height="17" rx="1.8" fill="#9aa6b2"/>
+  <!-- 三脚ベース -->
+  <path d="M19 52 L32 43 L45 52" fill="none" stroke="#9aa6b2" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
