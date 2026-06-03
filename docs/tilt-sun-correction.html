@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>地面が傾いていても、太陽が直してくれる｜パラボラアンテナ解説</title>
+<meta name="description" content="三脚を外に立てると地面の凸凹でアンテナの台座は少し傾く。その傾きを、空の太陽を使ってどう測り、どう補正するかを、たとえ話でやさしく解説。" />
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&family=Zen+Maru+Gothic:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  /* ===== PALETTE（中間＝warm notebook。地味すぎず子どもっぽすぎず） ===== */
+  :root{
+    --paper:#f7f1e2; --card:#fffdf6; --ink:#3a3225; --sub:#8a7c64;
+    --faint:#e7dcc4; --rule:#ece2cd;
+    --coral:#e8765a; --teal:#2f9095; --honey:#e6ac3e; --sage:#86a060; --plum:#b3789e;
+    --accent:var(--coral);
+    --ruleline:rgba(168,140,96,.16);
+    --marginline:rgba(232,118,90,.4);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:'Zen Maru Gothic',sans-serif;color:var(--ink);line-height:1.95;
+    background-color:var(--paper);
+    background-image:
+      repeating-linear-gradient(transparent 0 33px,var(--ruleline) 33px 34px),
+      linear-gradient(90deg,transparent 55px,var(--marginline) 55px 57px,transparent 57px);
+    background-attachment:fixed;-webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:730px;margin:0 auto;padding:0 26px 0 74px}
+  @media(max-width:560px){
+    .wrap{padding-left:34px;padding-right:18px}
+    body{background-image:repeating-linear-gradient(transparent 0 33px,var(--ruleline) 33px 34px)}
+  }
+  .pen{font-family:'Klee One',cursive}
+  .uline{background-image:linear-gradient(transparent 58%,rgba(230,172,62,.55) 58%);padding:0 3px}
+  .ucoral{background-image:linear-gradient(transparent 58%,rgba(232,118,90,.45) 58%);padding:0 3px}
+
+  /* ===== HEADER ===== */
+  header{padding:62px 0 24px;position:relative}
+  .backlink{font-family:'Klee One';font-size:.84rem;color:var(--teal);text-decoration:none;display:inline-block;margin-bottom:14px}
+  .backlink:hover{color:var(--coral)}
+  .tape{display:inline-block;background:rgba(230,172,62,.55);color:#7a5a16;font-family:'Klee One';
+    font-size:.82rem;letter-spacing:.06em;padding:5px 16px;transform:rotate(-2deg);
+    box-shadow:1px 2px 5px rgba(0,0,0,.08);margin-bottom:20px}
+  h1{font-family:'Klee One';font-weight:600;font-size:clamp(2rem,6vw,3.05rem);line-height:1.4}
+  .sub-t{font-family:'Klee One';color:var(--sub);font-size:1.08rem;margin-top:12px}
+  .meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}
+  .meta span{font-family:'Klee One';font-size:.82rem;color:var(--ink);background:var(--card);
+    border:1.5px solid var(--faint);border-radius:18px;padding:4px 14px}
+
+  .index{margin:28px 0 0;padding:18px 22px;background:var(--card);border:2px solid var(--faint);border-radius:10px;
+    box-shadow:3px 4px 0 rgba(140,110,70,.12)}
+  .index .ttl{font-family:'Klee One';color:var(--coral);font-size:.9rem;letter-spacing:.06em;margin-bottom:8px}
+  .index ol{list-style:none;counter-reset:i;columns:2;column-gap:28px}
+  @media(max-width:520px){.index ol{columns:1}}
+  .index li{counter-increment:i;padding:5px 0;font-size:.92rem;border-bottom:1px dotted var(--rule)}
+  .index a{color:var(--ink);text-decoration:none;display:flex;gap:9px;align-items:baseline}
+  .index a::before{content:counter(i,decimal-leading-zero);font-family:'Klee One';color:var(--coral);font-size:.78rem;min-width:22px}
+  .index a:hover{color:var(--coral)}
+
+  /* ===== SECTION ===== */
+  section{padding:42px 0;position:relative;border-top:1.5px dashed var(--rule)}
+  section:first-of-type{border-top:none}
+  .num{position:absolute;left:-58px;top:38px;font-family:'Klee One';font-weight:600;font-size:1.1rem;color:#fff;
+    width:44px;height:44px;display:grid;place-items:center;border-radius:12px;box-shadow:2px 3px 0 rgba(140,110,70,.18);transform:rotate(-3deg)}
+  .num small{font-size:.55rem;display:block;line-height:1;margin-bottom:1px;opacity:.85}
+  @media(max-width:560px){.num{left:-30px;width:32px;height:32px;font-size:.85rem;top:40px}.num small{display:none}}
+  .c-coral{background:var(--coral)} .c-teal{background:var(--teal)} .c-honey{background:var(--honey)}
+  .c-sage{background:var(--sage)} .c-plum{background:var(--plum)}
+  .kicker{font-family:'Klee One';font-size:.84rem;letter-spacing:.1em;margin-bottom:4px}
+  .k-coral{color:var(--coral)} .k-teal{color:var(--teal)} .k-honey{color:#c89124} .k-sage{color:#6f8a4c} .k-plum{color:var(--plum)}
+  h2{font-family:'Klee One';font-weight:600;font-size:clamp(1.45rem,4.4vw,1.95rem);margin-bottom:14px;line-height:1.5}
+  p{margin-bottom:13px}
+  strong{font-weight:700}
+
+  /* memo */
+  .memo{position:relative;border-radius:10px;padding:16px 20px;margin:18px 0;border:1.5px solid;border-left-width:5px}
+  .memo .h{font-family:'Klee One';font-size:.95rem;margin-bottom:4px;display:flex;align-items:center;gap:8px}
+  .memo p{font-size:.93rem;margin-bottom:0}
+  .m-honey{background:rgba(230,172,62,.12);border-color:rgba(230,172,62,.5)} .m-honey .h{color:#b9821c}
+  .m-teal{background:rgba(47,144,149,.10);border-color:rgba(47,144,149,.45)} .m-teal .h{color:var(--teal)}
+  .m-coral{background:rgba(232,118,90,.10);border-color:rgba(232,118,90,.45)} .m-coral .h{color:var(--coral)}
+  .m-sage{background:rgba(134,160,96,.12);border-color:rgba(134,160,96,.5)} .m-sage .h{color:#6f8a4c}
+
+  /* talk */
+  .talk{margin:20px 0;padding:14px 18px;background:var(--card);border:1.5px solid var(--faint);border-radius:10px}
+  .talk .line{display:flex;gap:12px;margin:8px 0;align-items:flex-start}
+  .talk .who{font-family:'Klee One';font-size:.95rem;width:42px;flex:0 0 auto;text-align:center;border-radius:14px;padding:1px 0;color:#fff}
+  .talk .line.q .who{background:var(--teal)} .talk .line.a .who{background:var(--coral)}
+  .talk .line p{font-size:.96rem;margin:0;padding-top:1px}
+
+  /* diagram */
+  .diagram{margin:20px 0;padding:22px;background:var(--card);border:2px solid var(--faint);border-radius:12px;box-shadow:3px 4px 0 rgba(140,110,70,.1)}
+  .diagram .cap{font-family:'Klee One';color:var(--sub);font-size:.86rem;text-align:center;margin-bottom:14px}
+  .diagram .row{display:flex;gap:18px;justify-content:center;align-items:stretch;flex-wrap:wrap}
+  .diagram .box{flex:1;min-width:160px;border:2px solid var(--faint);border-radius:10px;padding:16px;text-align:center;background:var(--paper)}
+  .diagram .box .e{font-size:1.8rem}
+  .diagram .box.alt{border-color:rgba(232,118,90,.5);background:rgba(232,118,90,.06)}
+  .diagram .box b{font-family:'Klee One';display:block;margin:4px 0}
+  .diagram .box small{color:var(--sub);font-size:.82rem;line-height:1.7}
+  .diagram .vs{align-self:center;font-family:'Klee One';color:var(--coral);font-size:1.2rem}
+
+  /* gui */
+  ol.gui{list-style:none;counter-reset:g;margin:12px 0}
+  ol.gui li{counter-increment:g;position:relative;padding:10px 0 10px 42px;font-size:.95rem;border-top:1px solid var(--rule)}
+  ol.gui li:first-child{border-top:none}
+  ol.gui li::before{content:counter(g);position:absolute;left:0;top:9px;width:28px;height:28px;
+    background:var(--accent);color:#fff;border-radius:50%;font-family:'Klee One';display:grid;place-items:center;font-size:.85rem}
+  .ui{font-family:'Klee One';background:rgba(47,144,149,.1);border:1px solid rgba(47,144,149,.3);border-radius:5px;padding:0 7px;color:#226;font-size:.92em}
+
+  /* nutshell */
+  .nutshell{position:relative;margin:8px 0;padding:34px 30px;border-radius:16px;text-align:center;
+    background:linear-gradient(135deg,rgba(232,118,90,.12),rgba(230,172,62,.16));
+    border:2px solid rgba(232,118,90,.38);box-shadow:4px 5px 0 rgba(140,110,70,.14)}
+  .nutshell .lbl{display:inline-block;font-family:'Klee One';font-size:.85rem;color:#fff;background:var(--coral);
+    padding:4px 16px;border-radius:16px;transform:rotate(-2deg);box-shadow:1px 2px 4px rgba(0,0,0,.12);margin-bottom:16px}
+  .nutshell .big{font-family:'Klee One';font-weight:600;font-size:clamp(1.35rem,4.4vw,1.95rem);line-height:1.7;color:var(--ink)}
+  .nutshell .big .hl{background-image:linear-gradient(transparent 58%,rgba(230,172,62,.6) 58%);padding:0 4px}
+  .nutshell .sub{margin-top:14px;font-size:.95rem;color:var(--sub)}
+  .nutshell .quote{position:absolute;font-family:'Klee One';color:rgba(232,118,90,.3);font-size:3.4rem;line-height:1}
+  .nutshell .q1{top:8px;left:16px} .nutshell .q2{bottom:-6px;right:18px}
+
+  /* reveal */
+  .reveal{opacity:0;transform:translateY(18px);transition:.6s ease}
+  .reveal.in{opacity:1;transform:none}
+
+  footer{padding:40px 0 96px;border-top:1.5px dashed var(--rule)}
+  .colophon{padding:26px;background:linear-gradient(180deg,rgba(134,160,96,.14),var(--card));
+    border:2px solid rgba(134,160,96,.4);border-radius:14px;text-align:center;box-shadow:3px 4px 0 rgba(140,110,70,.12)}
+  .colophon .mk{font-family:'Klee One';font-weight:600;font-size:1.5rem;margin-bottom:8px;color:#5f7a40}
+  .colophon p{font-size:.95rem}
+  .colophon a{color:var(--teal);font-weight:700;text-decoration:none}
+  .colophon a:hover{color:var(--coral)}
+  .sig{text-align:right;font-family:'Klee One';color:var(--sub);margin-top:18px;font-size:.9rem}
+</style>
+</head>
+<body>
+  <!-- ============ HEADER ============ -->
+  <header class="wrap">
+    <a href="../index.html" class="backlink pen">← 3Dシミュレーションへ</a><br>
+    <span class="tape">アンテナのしくみノート No.1</span>
+    <h1>地面が傾いていても、<br><span class="ucoral">太陽が教えてくれる</span>。</h1>
+    <p class="sub-t">アンテナの「ねらいのズレ」を、空の太陽を使って直すしくみ。</p>
+    <div class="meta">
+      <span>☕ 読了 約5分</span>
+      <span>🎯 むずかしさ ★☆☆</span>
+      <span>🙋 対象 中学生〜</span>
+    </div>
+    <nav class="index">
+      <div class="ttl pen">目次</div>
+      <ol>
+        <li><a href="#s1">三脚は、少し傾いている</a></li>
+        <li><a href="#s2">「台座の傾き」ってなに</a></li>
+        <li><a href="#s3">なぜ太陽を使うの</a></li>
+        <li><a href="#s4">朝・昼・夕、3回ねらう</a></li>
+        <li><a href="#s5">クセを読んで、ねらいをずらす</a></li>
+        <li><a href="#s7">一言でいうと</a></li>
+      </ol>
+    </nav>
+  </header>
+
+  <!-- ============ 1. INTRO ============ -->
+  <section id="s1" class="wrap reveal">
+    <span class="num c-coral">1</span>
+    <p class="kicker k-coral pen">INTRO ・ はじめに</p>
+    <h2>三脚は、じつは<span class="uline">少しだけ傾いている</span></h2>
+    <p>パラボラアンテナ（おわん型のアンテナ）を外に持ち出して三脚で立てると、地面はどんなに平らに見えても小さな凸凹があります。だから台座は、自分では気づかないほど <strong>ほんの少し（だいたい1度未満）斜め</strong>に立ってしまいます。</p>
+    <p>こまったことに、アンテナ本体は <strong>「自分はまっすぐ水平だ」と思い込んでいる</strong>。だから空の目標に向かって計算どおりに首を振っても、傾いたぶんだけ少しズレて、ねらいを外してしまうのです。</p>
+    <div class="memo m-coral">
+      <div class="h pen">✎ たった1度くらい、いいのでは？</div>
+      <p>遠くの宇宙や衛星をねらうアンテナにとって、1度未満のズレでも電波をうまく受けられなくなる大問題。目隠しでダーツを投げて、的の中心を1cm外す感覚に近いです。</p>
+    </div>
+  </section>
+
+  <!-- ============ 2. BASICS ============ -->
+  <section id="s2" class="wrap reveal">
+    <span class="num c-teal">2</span>
+    <p class="kicker k-teal pen">BASICS ・ きほん</p>
+    <h2>そもそも「<span class="uline">台座の傾き</span>」って？</h2>
+    <p>台座の傾きは、たった2つの数字で言いあらわせます。<strong>「どれだけ傾いているか（大きさ）」</strong>と <strong>「どっちの方角へ傾いているか（向き）」</strong>。机のガタつきを「右奥へ2mm」と言うのと同じで、大きさと向きがそろって初めて傾きが決まります。</p>
+    <div class="talk">
+      <div class="line q"><span class="who">問</span><p>水平器（みずもり）で測ればいいのでは？</p></div>
+      <div class="line a"><span class="who">答</span><p>0.7度みたいな微妙な傾きは、道具で測りにくいうえ「どっち向きか」まで正確に出すのは大変。そこで、もっと確かな“ものさし”――空の太陽を使います。</p></div>
+    </div>
+    <div class="memo m-teal">
+      <div class="h pen">✎ ことばメモ</div>
+      <p>傾き＝<strong>大きさ</strong>（何度ぶん）＋<strong>向き</strong>（どの方角へ）の2点セット。この2つが分かれば、傾きは完全に言いあてられます。</p>
+    </div>
+  </section>
+
+  <!-- ============ 3. なぜ太陽 ============ -->
+  <section id="s3" class="wrap reveal">
+    <span class="num c-honey">3</span>
+    <p class="kicker k-honey pen">WHY ・ なぜ太陽？</p>
+    <h2>なぜ「<span class="uline">太陽</span>」を目印にするの？</h2>
+    <p>太陽は、<strong>日時と場所さえ分かれば、空のどこにいるかを正確に計算できます</strong>。いわば、答えが分かっている“動かないカンニングペーパー”。アンテナは「太陽はいま、ここにいるはず」と分かっているのに、向けてみると少しズレる。<strong>その「ズレ」こそが、台座が傾いている動かぬ証拠</strong>です。</p>
+    <div class="diagram">
+      <div class="cap pen">― どっちの“ものさし”を信じる？ ―</div>
+      <div class="row">
+        <div class="box"><div class="e">🤷</div><b>自分の感覚</b><small>台座が傾いていると、<br>「水平」の感覚そのものが<br>ずれている＝あてにならない</small></div>
+        <div class="vs">対</div>
+        <div class="box alt"><div class="e">☀️</div><b>太陽</b><small>時刻と場所から<br>位置がきっちり決まる＝<br>信じられる外の基準</small></div>
+      </div>
+    </div>
+    <div class="memo m-honey">
+      <div class="h pen">✎ コツ</div>
+      <p>自分のものさしが歪んでいても、<strong>外に正しいものさし（太陽）が1本ある</strong>と、その歪みっぷりを逆に測れます。</p>
+    </div>
+  </section>
+
+  <!-- ============ 4. 3回ねらう ============ -->
+  <section id="s4" class="wrap reveal">
+    <span class="num c-sage">4</span>
+    <p class="kicker k-sage pen">HOW ・ はかりかた</p>
+    <h2>朝・昼・夕、<span class="uline">3回ねらって</span>クセを読む</h2>
+    <p>やることはシンプル。1日に3回、太陽をねらって、的の中心からどっちにどれだけズレたかを記録します。</p>
+    <ol class="gui">
+      <li><span class="ui">9時（東）</span>・<span class="ui">12時（南）</span>・<span class="ui">15時（西）</span>の太陽の正しい位置を計算し、そこへアンテナを向ける</li>
+      <li>写った太陽が、<strong>的の中心からどっちへ・どれだけ</strong>ズレたかを測る</li>
+      <li>3回ぶんのズレを集める</li>
+    </ol>
+    <div class="talk">
+      <div class="line q"><span class="who">問</span><p>1回だけ測ればダメなの？</p></div>
+      <div class="line a"><span class="who">答</span><p>ダメなんです。1回だと「右にズレた」しか分からず、傾きの向きを1つに決められない。<strong>方角のちがう太陽で何度か見ると、ズレ方のクセ（パターン）が浮かび上がり</strong>、三角測量のように傾きの大きさと向きがピタッと決まります。</p></div>
+    </div>
+    <div class="memo m-sage">
+      <div class="h pen">✎ おもしろポイント</div>
+      <p>ズレる向きは、太陽がどの方角にいるかでクルッと変わります。その<strong>変わり方のパターンが、台座の傾きの“指紋”</strong>になっているのです。</p>
+    </div>
+  </section>
+
+  <!-- ============ 5. 逆算と補正 ============ -->
+  <section id="s5" class="wrap reveal">
+    <span class="num c-plum">5</span>
+    <p class="kicker k-plum pen">FIX ・ なおしかた</p>
+    <h2>クセから傾きを当て、<span class="uline">ねらいをずらす</span></h2>
+    <p>集めたズレのパターンから、コンピュータが「いちばんつじつまの合う傾き」を逆算します（たくさんの手がかりから犯人を当てる探偵のような計算です）。傾きさえ分かれば、あとはかんたん。台座は動かさず、<strong>「ちょっと右上をねらえば、的の真ん中に当たる」ように“指令”を先回りでずらす</strong>だけです。</p>
+    <div class="talk">
+      <div class="line q"><span class="who">問</span><p>傾きが分かったら、台座を直すの？</p></div>
+      <div class="line a"><span class="who">答</span><p>いいえ、台座はそのまま。代わりに指令をずらします。たとえば本当は「南・高さ70度」をねらいたくても、<strong>「178.6度・69.5度」と少しずらして命令</strong>すると、傾いたぶんが打ち消されて、太陽がピタッと的の真ん中に入ります。</p></div>
+    </div>
+    <div class="memo m-honey">
+      <div class="h pen">✎ わかったこと</div>
+      <p>傾きは「直す」のではなく「<strong>見越して、ねらいでカバーする</strong>」。ハンドルが少し左に取られる車でも、最初から少し右に切っておけばまっすぐ走れるのと同じ発想です。</p>
+    </div>
+  </section>
+
+  <!-- ============ 一言でいうと（必須・締め）============ -->
+  <section id="s7" class="wrap reveal">
+    <span class="num c-coral"><small>NOTE</small>※</span>
+    <p class="kicker k-coral pen">IN A NUTSHELL ・ まとめ</p>
+    <h2>一言でいうと</h2>
+    <div class="nutshell">
+      <span class="quote q1">“</span><span class="quote q2">”</span>
+      <span class="lbl pen">ひとことで</span>
+      <p class="big">自分の傾きに気づけないアンテナも、<span class="hl">空の確かな目印「太陽」を3回</span>見れば、地面の傾きを言い当てて、ねらいを直せる。</p>
+      <p class="sub">ガタついた机でも、外の景色を見れば「あ、自分が傾いてた」と気づけるのと同じです。</p>
+    </div>
+  </section>
+
+  <footer class="wrap reveal">
+    <div class="colophon">
+      <div class="mk pen">3Dで動かして確かめよう 🎉</div>
+      <p>この「アンテナの向け方」を、ブラウザで自由に動かせる3Dシミュレーションを公開中です。<br>
+        <a href="../index.html">→ パラボラアンテナ 3Dシミュレーション</a></p>
+      <p class="sig pen">― 傾いていても、空を見上げれば、わかる ―</p>
+    </div>
+  </footer>
+
+<script>
+  const io=new IntersectionObserver((es)=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}}),{threshold:.08});
+  document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+</script>
+</body>
+</html>

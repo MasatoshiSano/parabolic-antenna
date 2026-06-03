@@ -28,6 +28,14 @@
                border-radius:999px; padding:2px 9px; margin-bottom:8px; }
   .note { color:var(--dim); font-size:13px; background:var(--panel); border:1px solid var(--line);
           border-radius:12px; padding:14px 16px; }
+  .readmore { display:flex; align-items:center; gap:10px; margin-top:16px; text-decoration:none; color:var(--txt);
+              background:linear-gradient(180deg,#1a2530,#171c24); border:1px solid var(--line); border-radius:12px;
+              padding:14px 18px; transition:border-color .12s, transform .12s; }
+  .readmore:hover { border-color:var(--accent); transform:translateY(-2px); }
+  .readmore .em { font-size:22px; }
+  .readmore b { font-size:14.5px; }
+  .readmore span { color:var(--dim); font-size:13px; }
+  .readmore .arw { margin-left:auto; color:var(--accent); font-weight:700; }
   footer { margin-top:30px; color:var(--dim); font-size:13px; display:flex; gap:18px; flex-wrap:wrap; }
   footer a { color:var(--accent); text-decoration:none; }
   footer a:hover { text-decoration:underline; }
@@ -66,6 +74,12 @@
   <div class="note">
     💡 動作には最近のブラウザとインターネット接続が必要です（3D描画ライブラリ Three.js をCDNから読み込みます）。スマホでも動きますが、PC・大きめの画面が見やすいです。
   </div>
+
+  <a class="readmore" href="docs/tilt-sun-correction.html">
+    <span class="em">📖</span>
+    <span><b>はじめての人へ — やさしい解説</b><br><span>「地面が傾いていても、太陽で直すしくみ」を中学生にも分かるように</span></span>
+    <span class="arw">読む →</span>
+  </a>
 
   <footer>
     <a href="https://github.com/MasatoshiSano/parabolic-antenna">GitHub リポジトリ</a>
