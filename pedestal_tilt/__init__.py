@@ -29,6 +29,7 @@ from .actuator_tripod import (
     platform_point,
     reachable,
 )
+from .sun import delta_t_seconds, refraction_deg, sun_altaz
 
 __all__ = [
     "Observation",
@@ -58,4 +59,8 @@ __all__ = [
     "reachable",
     "home_length",
     "max_zenith_distance",
+    # 太陽位置(観測地・日時 → 方位/高度)
+    "sun_altaz",
+    "refraction_deg",
+    "delta_t_seconds",
 ]

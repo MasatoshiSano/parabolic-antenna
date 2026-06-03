@@ -13,6 +13,7 @@
 |------|-------------|
 | `demo.py` | 既定観測データで `fit_tilt` → `correction` → `forward_pointing` の往復検算を出力。期待値は θ ≈ 0.7071°(=√0.5°), φ = 315° (NW) |
 | `demo_3axis.py` | 3軸(Az–El–XEl)で天頂キーホールが消えることを数値比較。天頂最接近 1° のパスで 2軸=方位総移動 174° vs 3軸=0°、XEl 肩代わり、指向誤差検算を出力 |
+| `demo_sun.py` | 観測地・日時から `sun_altaz` で太陽位置を厳密計算し、合成像ずれ → `fit_tilt` で台座傾きを復元する一連を出力(東京・春分の 9/12/15時) |
 
 ## For AI Agents
 
@@ -23,7 +24,7 @@
 - ユーザー向け文字列は日本語(README/REPORT に揃える)。
 
 ### Testing Requirements
-- 実行確認:`python3 examples/demo.py` / `python3 examples/demo_3axis.py`(リポジトリルートから)。
+- 実行確認:`python3 examples/demo.py` / `python3 examples/demo_3axis.py` / `python3 examples/demo_sun.py`(リポジトリルートから)。
 - ロジック検証は `tests/` 側で行う。デモ自体には assert を書かない。
 
 ### Common Patterns

@@ -32,7 +32,11 @@ from pedestal_tilt import (
     leg_lengths,
     max_zenith_distance,
     reachable,
+    refraction_deg,
+    sun_altaz,
 )
+from pedestal_tilt.sun import _julian_day, _sun_ra_dec
+from datetime import datetime, timedelta, timezone
 
 
 class TestGeometry(unittest.TestCase):
@@ -343,6 +347,55 @@ class TestActuatorTripod(unittest.TestCase):
         wide = TripodGeometry(stroke=(0.5, 1.6))
         narrow = TripodGeometry(stroke=(1.0, 1.1))
         self.assertGreater(max_zenith_distance(wide), max_zenith_distance(narrow))
+
+
+class TestSun(unittest.TestCase):
+    """太陽位置(NOAA/Meeus 系)— 標準ライブラリのみ。"""
+
+    def test_meeus_example_25a(self):
+        """Meeus 例25.a(1992-10-13 0h TD)の赤経・赤緯と一致(NOAA低次法)。"""
+        ra, dec = _sun_ra_dec(_julian_day(datetime(1992, 10, 13, 0, 0, 0)))
+        self.assertAlmostEqual(ra, 198.3808, places=2)  # Meeus低次法 198.38083°
+        self.assertAlmostEqual(dec, -7.7851, places=3)  # Meeus -7.78507°
+
+    def test_solstice_transit_elevation(self):
+        """夏至・東京の南中高度 = 90 − |緯度 − 赤緯| ≈ 77.76°、方位 ≈ 南。"""
+        lat, lon = 35.681, 139.767
+        t0 = datetime(2024, 6, 21, 0, 0, 0, tzinfo=timezone.utc)
+        best_el, best_az = -99.0, None
+        for m in range(0, 1440, 1):
+            az, el = sun_altaz(lat, lon, t0 + timedelta(minutes=m), refraction=False)
+            if el > best_el:
+                best_el, best_az = el, az
+        self.assertAlmostEqual(best_el, 90.0 - abs(lat - 23.44), delta=0.2)
+        self.assertAlmostEqual(best_az, 180.0, delta=1.0)
+
+    def test_equinox_declination_near_zero(self):
+        """春分の頃は太陽赤緯がほぼ 0。"""
+        _, dec = _sun_ra_dec(_julian_day(datetime(2024, 3, 20, 3, 6, 0)))
+        self.assertLess(abs(dec), 0.2)
+
+    def test_refraction_monotone_and_bounds(self):
+        """大気差は地平で最大(~0.5°)、高仰角でほぼ 0、単調減少。"""
+        self.assertAlmostEqual(refraction_deg(0.0), 0.483, delta=0.02)
+        self.assertLess(refraction_deg(80.0), 0.01)
+        self.assertGreater(refraction_deg(10.0), refraction_deg(40.0))
+
+    def test_refraction_toggle_raises_apparent_elevation(self):
+        """refraction=True の高度は False(幾何学)より大気差ぶん高い。"""
+        lat, lon = 35.681, 139.767
+        t = datetime(2024, 3, 20, 6, 0, 0, tzinfo=timezone(timedelta(hours=9)))
+        _, el_geom = sun_altaz(lat, lon, t, refraction=False)
+        _, el_app = sun_altaz(lat, lon, t, refraction=True)
+        self.assertAlmostEqual(el_app - el_geom, refraction_deg(el_geom), places=6)
+        self.assertGreater(el_app, el_geom)
+
+    def test_timezone_aware_equals_utc(self):
+        """tz 付き入力は UTC 換算され、同一時刻なら結果が一致。"""
+        lat, lon = 35.681, 139.767
+        jst = datetime(2024, 3, 20, 21, 0, 0, tzinfo=timezone(timedelta(hours=9)))
+        utc = datetime(2024, 3, 20, 12, 0, 0, tzinfo=timezone.utc)
+        self.assertEqual(sun_altaz(lat, lon, jst), sun_altaz(lat, lon, utc))
 
 
 if __name__ == "__main__":

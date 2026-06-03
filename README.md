@@ -20,10 +20,12 @@ parabolic-antenna/
 │   ├── geometry.py                 # 順問題・像ずれ・補正(numpy 不要)
 │   ├── solver.py                   # 最小二乗で (θ_t, φ_t) 推定
 │   ├── three_axis.py               # 3軸(Az–El–XEl)運動学・キーホール除去・関節可動域
-│   └── actuator_tripod.py          # 実機の3本リニアアクチュエータ(パラレル機構)運動学
+│   ├── actuator_tripod.py          # 実機の3本リニアアクチュエータ(パラレル機構)運動学
+│   └── sun.py                      # 観測地・日時 → 太陽の方位/高度(NOAA/Meeus, stdlibのみ)
 ├── examples/
 │   ├── demo.py                     # 本問題のサンプル実行
-│   └── demo_3axis.py               # 天頂キーホール除去・第3軸の中立位置デモ
+│   ├── demo_3axis.py               # 天頂キーホール除去・第3軸の中立位置デモ
+│   └── demo_sun.py                 # 太陽位置の厳密計算 → 傾き推定パイプライン
 ├── tests/
 │   └── test_pedestal_tilt.py       # 単体テスト(stdlib unittest)
 ├── sim/
@@ -38,7 +40,7 @@ parabolic-antenna/
 ## 動作環境
 
 - Python 3.10+
-- コア(`pedestal_tilt/`・`examples/`・`tests/`)は標準ライブラリ(`math`, `dataclasses`, `unittest`)のみ。外部依存なし。
+- コア(`pedestal_tilt/`・`examples/`・`tests/`)は標準ライブラリ(`math`, `dataclasses`, `datetime`, `unittest`)のみ。外部依存なし。
 - 3D シミュレーション(`sim/*.html`)はブラウザで動作。Three.js を CDN から読み込むためインターネット接続が必要(ファイルを直接開けば可、サーバ不要)。
 
 ## 使い方
@@ -93,6 +95,25 @@ a_cmd, h_cmd = correction(a_calc_deg=180.0, h_calc_deg=70.0,
                           theta_t_deg=theta, phi_t_deg=phi)
 print(f"指令値: ({a_cmd:.3f}°, {h_cmd:.3f}°)")
 ```
+
+### 太陽位置を厳密に求める
+
+太陽の真位置 (方位, 高度) を観測地・日時から計算する(NOAA/Meeus 系、**標準ライブラリのみ**、
+誤差 ~0.01° 級)。傾き推定の観測値づくりに使える。
+
+```python
+from datetime import datetime, timezone, timedelta
+from pedestal_tilt import sun_altaz
+
+JST = timezone(timedelta(hours=9))
+az, el = sun_altaz(lat_deg=35.681, lon_deg=139.767,        # 東京
+                   when_utc=datetime(2024, 3, 20, 12, 0, tzinfo=JST))
+# → 方位 184.98°, 高度 54.23°(大気差込みの「見かけ」位置)
+```
+
+- 方位=北0/東90、高度=地平0/天頂90。`when_utc` は tz 付きなら UTC へ自動変換(naive は UTC とみなす)。
+- `refraction=False` で大気差を除いた幾何学的真位置。`delta_t_s=` で ΔT(=TT−UT)を上書き可。
+- `python3 examples/demo_sun.py` で「厳密太陽位置 → `fit_tilt` で傾き復元」の一連を実演。
 
 ## 物理モデル(要約)
 

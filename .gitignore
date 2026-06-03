@@ -23,6 +23,9 @@ Thumbs.db
 *.swo
 *:Zone.Identifier
 
+# MS Office 一時ロックファイル(xlsx を開くと生成される)
+~$*
+
 # OMC working directory (local-only state, plans, sessions, memory)
 .omc/
 
