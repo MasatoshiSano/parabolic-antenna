@@ -103,6 +103,11 @@
   .diagram .box small{color:var(--sub);font-size:.82rem;line-height:1.7}
   .diagram .vs{align-self:center;font-family:'Klee One';color:var(--coral);font-size:1.2rem}
 
+  /* figure（手描き風SVG図解） */
+  .fig{margin:20px 0;padding:16px 18px 12px;background:var(--card);border:2px solid var(--faint);border-radius:12px;box-shadow:3px 4px 0 rgba(140,110,70,.1)}
+  .fig svg{display:block;width:100%;height:auto;max-width:460px;margin:0 auto}
+  .fig .cap{font-family:'Klee One';color:var(--sub);font-size:.84rem;text-align:center;margin-top:8px;line-height:1.6}
+
   /* gui */
   ol.gui{list-style:none;counter-reset:g;margin:12px 0}
   ol.gui li{counter-increment:g;position:relative;padding:10px 0 10px 42px;font-size:.95rem;border-top:1px solid var(--rule)}
@@ -169,6 +174,29 @@
     <h2>三脚は、じつは<span class="uline">少しだけ傾いている</span></h2>
     <p>パラボラアンテナ（おわん型のアンテナ）を外に持ち出して三脚で立てると、地面はどんなに平らに見えても小さな凸凹があります。だから台座は、自分では気づかないほど <strong>ほんの少し（だいたい1度未満）斜め</strong>に立ってしまいます。</p>
     <p>こまったことに、アンテナ本体は <strong>「自分はまっすぐ水平だ」と思い込んでいる</strong>。だから空の目標に向かって計算どおりに首を振っても、傾いたぶんだけ少しズレて、ねらいを外してしまうのです。</p>
+
+    <figure class="fig">
+      <svg viewBox="0 0 420 200" role="img" aria-label="的の中心から太陽がずれている図">
+        <defs><marker id="a1" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#e8765a"/></marker></defs>
+        <g transform="translate(238,100)">
+          <circle r="82" fill="#fffdf6" stroke="#e7dcc4" stroke-width="2"/>
+          <circle r="55" fill="none" stroke="#ece2cd" stroke-width="1.5"/>
+          <circle r="28" fill="none" stroke="#ece2cd" stroke-width="1.5"/>
+          <line x1="-82" y1="0" x2="82" y2="0" stroke="#ece2cd"/>
+          <line x1="0" y1="-82" x2="0" y2="82" stroke="#ece2cd"/>
+          <circle r="5" fill="#2f9095"/>
+          <line x1="6" y1="-4" x2="34" y2="-30" stroke="#e8765a" stroke-width="2.5" marker-end="url(#a1)"/>
+          <circle cx="50" cy="-42" r="15" fill="#f4c430" opacity=".25"/>
+          <circle cx="50" cy="-42" r="10" fill="#e6ac3e"/>
+        </g>
+        <text x="288" y="34" text-anchor="middle" font-family="'Klee One',sans-serif" font-size="12.5" fill="#c89124">写った太陽</text>
+        <text x="118" y="98" text-anchor="end" font-family="'Klee One',sans-serif" font-size="12.5" fill="#2f9095">ねらった<tspan x="118" dy="16">中心</tspan></text>
+        <line x1="122" y1="100" x2="150" y2="100" stroke="#2f9095" stroke-width="1.5" stroke-dasharray="3 3"/>
+        <text x="300" y="58" font-family="'Klee One',sans-serif" font-size="13" fill="#e8765a">ズレ</text>
+      </svg>
+      <figcaption class="cap pen">― 台座が傾くと、太陽が的の中心から少しズレて写る。この「ズレ」が手がかり ―</figcaption>
+    </figure>
+
     <div class="memo m-coral">
       <div class="h pen">✎ たった1度くらい、いいのでは？</div>
       <p>遠くの宇宙や衛星をねらうアンテナにとって、1度未満のズレでも電波をうまく受けられなくなる大問題。目隠しでダーツを投げて、的の中心を1cm外す感覚に近いです。</p>
@@ -181,6 +209,30 @@
     <p class="kicker k-teal pen">BASICS ・ きほん</p>
     <h2>そもそも「<span class="uline">台座の傾き</span>」って？</h2>
     <p>台座の傾きは、たった2つの数字で言いあらわせます。<strong>「どれだけ傾いているか（大きさ）」</strong>と <strong>「どっちの方角へ傾いているか（向き）」</strong>。机のガタつきを「右奥へ2mm」と言うのと同じで、大きさと向きがそろって初めて傾きが決まります。</p>
+
+    <figure class="fig">
+      <svg viewBox="0 0 440 280" role="img" aria-label="台座が傾いてアンテナの上が真上からθだけずれている図">
+        <defs><marker id="a2" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#e8765a"/></marker></defs>
+        <path d="M20,244 Q110,238 200,244 Q250,248 270,244 Q300,236 420,246" fill="none" stroke="#86a060" stroke-width="3" stroke-linecap="round"/>
+        <ellipse cx="300" cy="244" rx="22" ry="9" fill="#cbb894"/>
+        <text x="300" y="266" text-anchor="middle" font-family="'Klee One',sans-serif" font-size="11.5" fill="#8a7c64">石でかさ上げ</text>
+        <line x1="220" y1="246" x2="220" y2="44" stroke="#2f9095" stroke-width="2" stroke-dasharray="6 5"/>
+        <text x="226" y="40" font-family="'Klee One',sans-serif" font-size="13" fill="#2f9095">真上</text>
+        <line x1="220" y1="246" x2="150" y2="258" stroke="#9aa6b2" stroke-width="3" stroke-linecap="round"/>
+        <line x1="220" y1="246" x2="300" y2="240" stroke="#9aa6b2" stroke-width="3" stroke-linecap="round"/>
+        <line x1="220" y1="246" x2="232" y2="262" stroke="#9aa6b2" stroke-width="3" stroke-linecap="round"/>
+        <g transform="rotate(-15 220 246)">
+          <rect x="214" y="120" width="12" height="128" rx="4" fill="#9aa6b2"/>
+          <ellipse cx="220" cy="114" rx="60" ry="21" fill="#f2f4f7" stroke="#c7ced6" stroke-width="2"/>
+          <line x1="220" y1="112" x2="220" y2="66" stroke="#e8765a" stroke-width="2.5" marker-end="url(#a2)"/>
+        </g>
+        <text x="96" y="78" font-family="'Klee One',sans-serif" font-size="13" fill="#e8765a">アンテナが<tspan x="96" dy="16">思う『上』</tspan></text>
+        <path d="M220,150 A96,96 0 0,0 195,153" fill="none" stroke="#3a3225" stroke-width="1.6"/>
+        <text x="198" y="146" text-anchor="end" font-family="'Klee One',sans-serif" font-size="14" fill="#3a3225">θ</text>
+      </svg>
+      <figcaption class="cap pen">― 石などで台座が傾くと、アンテナの『上』が真上から θ（大きさ）だけずれる ―</figcaption>
+    </figure>
+
     <div class="talk">
       <div class="line q"><span class="who">問</span><p>水平器（みずもり）で測ればいいのでは？</p></div>
       <div class="line a"><span class="who">答</span><p>0.7度みたいな微妙な傾きは、道具で測りにくいうえ「どっち向きか」まで正確に出すのは大変。そこで、もっと確かな“ものさし”――空の太陽を使います。</p></div>
@@ -222,6 +274,38 @@
       <li>写った太陽が、<strong>的の中心からどっちへ・どれだけ</strong>ズレたかを測る</li>
       <li>3回ぶんのズレを集める</li>
     </ol>
+
+    <figure class="fig">
+      <svg viewBox="0 0 460 250" role="img" aria-label="朝昼夕の3つの太陽と、時刻ごとに変わるズレの向き">
+        <defs><marker id="a3" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#e8765a"/></marker></defs>
+        <path d="M40,205 A210,165 0 0,1 420,205" fill="rgba(47,144,149,.05)" stroke="#bcd0d0" stroke-width="1.5" stroke-dasharray="5 5"/>
+        <line x1="24" y1="205" x2="436" y2="205" stroke="#86a060" stroke-width="3"/>
+        <text x="58" y="224" font-family="'Klee One',sans-serif" font-size="12" fill="#6f8a4c">東</text>
+        <text x="230" y="224" text-anchor="middle" font-family="'Klee One',sans-serif" font-size="12" fill="#6f8a4c">南</text>
+        <text x="402" y="224" text-anchor="end" font-family="'Klee One',sans-serif" font-size="12" fill="#6f8a4c">西</text>
+        <g transform="translate(230,205)">
+          <rect x="-4" y="-26" width="8" height="26" rx="3" fill="#9aa6b2"/>
+          <ellipse cx="0" cy="-30" rx="20" ry="8" fill="#f2f4f7" stroke="#c7ced6" stroke-width="1.5"/>
+        </g>
+        <g transform="translate(96,150)">
+          <circle r="16" fill="#f4c430" opacity=".22"/><circle r="11" fill="#e6ac3e"/>
+          <line x1="2" y1="15" x2="16" y2="30" stroke="#e8765a" stroke-width="2.4" marker-end="url(#a3)"/>
+          <text x="0" y="-22" text-anchor="middle" font-family="'Klee One',sans-serif" font-size="11.5" fill="#3a3225">9時(低い)</text>
+        </g>
+        <g transform="translate(230,74)">
+          <circle r="16" fill="#f4c430" opacity=".22"/><circle r="11" fill="#e6ac3e"/>
+          <line x1="0" y1="15" x2="-4" y2="34" stroke="#e8765a" stroke-width="2.4" marker-end="url(#a3)"/>
+          <text x="0" y="-22" text-anchor="middle" font-family="'Klee One',sans-serif" font-size="11.5" fill="#3a3225">12時(高い)</text>
+        </g>
+        <g transform="translate(364,150)">
+          <circle r="16" fill="#f4c430" opacity=".22"/><circle r="11" fill="#e6ac3e"/>
+          <line x1="-2" y1="14" x2="-18" y2="24" stroke="#e8765a" stroke-width="2.4" marker-end="url(#a3)"/>
+          <text x="0" y="-22" text-anchor="middle" font-family="'Klee One',sans-serif" font-size="11.5" fill="#3a3225">15時(低い)</text>
+        </g>
+      </svg>
+      <figcaption class="cap pen">― 太陽の方角が変わると、ズレる向き（赤い矢印）も変わる。その変わり方が傾きの『指紋』 ―</figcaption>
+    </figure>
+
     <div class="talk">
       <div class="line q"><span class="who">問</span><p>1回だけ測ればダメなの？</p></div>
       <div class="line a"><span class="who">答</span><p>ダメなんです。1回だと「右にズレた」しか分からず、傾きの向きを1つに決められない。<strong>方角のちがう太陽で何度か見ると、ズレ方のクセ（パターン）が浮かび上がり</strong>、三角測量のように傾きの大きさと向きがピタッと決まります。</p></div>
@@ -238,6 +322,35 @@
     <p class="kicker k-plum pen">FIX ・ なおしかた</p>
     <h2>クセから傾きを当て、<span class="uline">ねらいをずらす</span></h2>
     <p>集めたズレのパターンから、コンピュータが「いちばんつじつまの合う傾き」を逆算します（たくさんの手がかりから犯人を当てる探偵のような計算です）。傾きさえ分かれば、あとはかんたん。台座は動かさず、<strong>「ちょっと右上をねらえば、的の真ん中に当たる」ように“指令”を先回りでずらす</strong>だけです。</p>
+
+    <figure class="fig">
+      <svg viewBox="0 0 460 215" role="img" aria-label="そのまま命令すると外し、傾きを見越してずらすと中心に当たる図">
+        <defs><marker id="a4" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#e8765a"/></marker></defs>
+        <text x="120" y="22" text-anchor="middle" font-family="'Klee One',sans-serif" font-size="13.5" fill="#3a3225">そのまま命令</text>
+        <g transform="translate(120,108)">
+          <circle r="60" fill="#fffdf6" stroke="#e7dcc4" stroke-width="2"/>
+          <circle r="32" fill="none" stroke="#ece2cd" stroke-width="1.5"/>
+          <line x1="-60" y1="0" x2="60" y2="0" stroke="#ece2cd"/><line x1="0" y1="-60" x2="0" y2="60" stroke="#ece2cd"/>
+          <g stroke="#2f9095" stroke-width="2.4" stroke-linecap="round"><line x1="-6" y1="-6" x2="6" y2="6"/><line x1="6" y1="-6" x2="-6" y2="6"/></g>
+          <line x1="0" y1="0" x2="22" y2="18" stroke="#e8765a" stroke-width="2.4" marker-end="url(#a4)"/>
+          <circle cx="30" cy="24" r="9" fill="#e6ac3e"/>
+          <text x="0" y="86" text-anchor="middle" font-family="'Klee One',sans-serif" font-size="13" fill="#e8765a">✗ 外す</text>
+        </g>
+        <text x="340" y="22" text-anchor="middle" font-family="'Klee One',sans-serif" font-size="13.5" fill="#3a3225">ずらして命令</text>
+        <g transform="translate(340,108)">
+          <circle r="60" fill="#fffdf6" stroke="#e7dcc4" stroke-width="2"/>
+          <circle r="32" fill="none" stroke="#ece2cd" stroke-width="1.5"/>
+          <line x1="-60" y1="0" x2="60" y2="0" stroke="#ece2cd"/><line x1="0" y1="-60" x2="0" y2="60" stroke="#ece2cd"/>
+          <g transform="translate(-30,-24)" stroke="#2f9095" stroke-width="2.4" stroke-linecap="round"><line x1="-6" y1="-6" x2="6" y2="6"/><line x1="6" y1="-6" x2="-6" y2="6"/></g>
+          <line x1="-30" y1="-24" x2="-6" y2="-4" stroke="#e8765a" stroke-width="2.4" marker-end="url(#a4)"/>
+          <circle cx="0" cy="0" r="9" fill="#e6ac3e"/>
+          <text x="0" y="86" text-anchor="middle" font-family="'Klee One',sans-serif" font-size="13" fill="#6f8a4c">◎ 当たる</text>
+        </g>
+        <text x="230" y="208" text-anchor="middle" font-family="'Klee One',sans-serif" font-size="11.5" fill="#8a7c64">✕ 命令した向き　→ 傾きのぶん　● 写る太陽</text>
+      </svg>
+      <figcaption class="cap pen">― 傾きは毎回おなじだけ押し戻す。だからその分だけ先に『ずらして』命令すれば中心に当たる ―</figcaption>
+    </figure>
+
     <div class="talk">
       <div class="line q"><span class="who">問</span><p>傾きが分かったら、台座を直すの？</p></div>
       <div class="line a"><span class="who">答</span><p>いいえ、台座はそのまま。代わりに指令をずらします。たとえば本当は「南・高さ70度」をねらいたくても、<strong>「178.6度・69.5度」と少しずらして命令</strong>すると、傾いたぶんが打ち消されて、太陽がピタッと的の真ん中に入ります。</p></div>
